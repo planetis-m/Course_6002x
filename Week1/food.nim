@@ -6,8 +6,7 @@ type
   Food = object
     name: string
     value, calories: int
-  Menu = object
-    foods: seq[Food]
+  Menu = seq[Food]
 
 # -------------
 # Food routines
@@ -22,48 +21,41 @@ proc `$`(f: Food): string =
 proc newFood(n: string, val, cal: int): Food =
   result = Food(name: n, value: val, calories: cal)
 
-proc getFoods(n: seq[string]; val, cal: seq[int]): auto =
-  return iterator: Food =
-    for i in 0 .. high(n):
-      yield newFood(n[i], val[i], cal[i])
+iterator foods(n: seq[string]; val, cal: seq[int]): Food =
+  let m = min(n.len, val.len, cal.len)
+  for i in 0 .. <m:
+    yield newFood(n[i], val[i], cal[i])
+
+proc isFilled(f: Food): bool =
+  if isNil(f.name):
+    return false
+  elif (f.value, f.calories) == (0, 0):
+    return false
+  else:
+    return true
 
 # -------------
 # Menu routines
 # -------------
 
-iterator items(m: Menu): Food =
-  for i in items(m.foods):
-    yield i
-
-iterator mitems(m: var Menu): var Food =
-  for i in mitems(m.foods):
-    yield i
-
-proc len(m: Menu): int =
-  result = len(m.foods)
-
-proc add(m: var Menu, f: Food) =
-  m.foods.add(f)
-
-proc `$`(m: Menu): string =
-  result = ""
-  if m.len != 0:
-    for f in items(m):
-      result.add($f & "\n")
-
-proc initMenu(size: int): Menu =
-  newSeq(result.foods, size)
+proc initMenu(size = 0): Menu =
+  newSeq(result, size)
 
 proc toMenu(n: seq[string]; val, cal: seq[int]): Menu =
-  let m = min(n.len, val.len, cal.len)
-  result = initMenu(m)
-  let foods = getFoods(n, val, cal)
-  for i in 0 .. <m:
-    let t = foods()
-    if finished(foods):
-      break
-    result.foods[i] = t
+  result = initMenu(n.len)
+  var index = 0
+  for f in foods(n, val, cal):
+    result[index] = f
+    inc(index)
 
+iterator items(m: Menu): Food {.inline.} =
+  ## iterates over each item of `a`.
+  var i = 0
+  let L = len(m)
+  while i < L:
+    if isFilled(m[i]): yield m[i]
+    inc(i)
+  assert(len(m) == L, "seq modified while iterating over it")
 
 # -----------
 # Course Code
