@@ -38,10 +38,7 @@ proc toMenu(n: seq[string]; val, cal: seq[int]): Menu =
   result = initMenu(m)
   let foods = getFoods(n, val, cal)
   for i in 0 .. <m:
-    let t = foods()
-    if finished(foods):
-      break
-    result[i] = t
+    result[i] = foods()
 
 # -----------
 # Course Code
