@@ -47,14 +47,14 @@ proc toMenu(n: seq[string]; val, cal: seq[int]): Menu =
 
 proc greedy(items: Menu, maxCost: int, cmp: proc(x, y: Food): int): (int, Menu) =
   var itemsCopy = sorted(items, cmp, Descending)
-  var toTake = initMenu()
+  var takenItems = initMenu()
   var totalValue, totalCost = 0
   for i in itemsCopy:
     if (totalCost + i.getCost()) <= maxCost:
-      toTake.add(i)
+      takenItems.add(i)
       totalCost += i.getCost()
       totalValue += i.getValue()
-  result = (totalValue, toTake)
+  result = (totalValue, takenItems)
 
 proc testGreedy(items: Menu, constraint: int, cmp: proc(x, y: Food): int) =
   let (val, taken) = greedy(items, constraint, cmp)
@@ -70,9 +70,9 @@ proc testGreedys(foods: Menu, maxUnits: int) =
   echo("\nUse greedy by density to allocate ", maxUnits, " calories")
   testGreedy(foods, maxUnits, density)
 
-# -----------
-# maxVal Impl
-# -----------
+# ----------------
+# Search Tree Impl
+# ----------------
 
 proc maxVal(toConsider: Menu, avail: int): (int, Menu) =
   # Assumes toConsider a list of items, avail a weight
