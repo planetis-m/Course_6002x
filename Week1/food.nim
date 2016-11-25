@@ -45,19 +45,19 @@ proc toMenu(n: seq[string]; val, cal: seq[int]): Menu =
 # Greedy impl
 # -----------
 
-proc greedy(items: Menu, maxCost: int, cmp: proc(x, y: Food): int): (Menu, int) =
-  var itemsCopy = sorted(items, cmp, SortOrder.Descending)
-  var result = initMenu()
+proc greedy(items: Menu, maxCost: int, cmp: proc(x, y: Food): int): (int, Menu) =
+  var itemsCopy = sorted(items, cmp, Descending)
+  var toTake = initMenu()
   var totalValue, totalCost = 0
   for i in itemsCopy:
     if (totalCost + i.getCost()) <= maxCost:
-      result.add(i)
+      toTake.add(i)
       totalCost += i.getCost()
       totalValue += i.getValue()
-  return (result, totalValue)
+  result = (totalValue, toTake)
 
 proc testGreedy(items: Menu, constraint: int, cmp: proc(x, y: Food): int) =
-  let (taken, val) = greedy(items, constraint, cmp)
+  let (val, taken) = greedy(items, constraint, cmp)
   echo("Total value of items taken = ", val)
   for item in taken:
     echo("   ", item)
@@ -71,6 +71,40 @@ proc testGreedys(foods: Menu, maxUnits: int) =
   testGreedy(foods, maxUnits, density)
 
 # -----------
+# maxVal Impl
+# -----------
+
+proc maxVal(toConsider: Menu, avail: int): (int, Menu) =
+  # Assumes toConsider a list of items, avail a weight
+  # Returns a tuple of the total value of a solution to the
+  # 0/1 knapsack problem and the items of that solution
+  if toConsider.len == 0 or avail == 0:
+    result = (0, nil)
+  elif toConsider[0].getCost() > avail:
+    #Explore right branch only
+    result = maxVal(toConsider[1..^1], avail)
+  else:
+    let nextItem = toConsider[0]
+    #Explore left branch
+    var (withVal, withToTake) = maxVal(toConsider[1..^1],
+                                  avail - nextItem.getCost())
+    withVal += nextItem.getValue()
+    #Explore right branch
+    let (withoutVal, withoutToTake) = maxVal(toConsider[1..^1], avail)
+    #Choose better branch
+    if withVal > withoutVal:
+      result = (withVal, withToTake & nextItem)
+    else:
+      result = (withoutVal, withoutToTake)
+
+proc testMaxVal(foods: Menu, maxUnits: int) =
+  echo("Use search tree to allocate ", maxUnits, " calories")
+  let (val, taken) = maxVal(foods, maxUnits)
+  echo("Total value of items taken = ", val)
+  for item in taken:
+    echo("   ", item)
+
+# -----------
 # Course Code
 # -----------
 
@@ -81,4 +115,6 @@ let values = @[89, 90, 95, 100, 90, 79, 50, 10]
 let calories = @[123, 154, 258, 354, 365, 150, 95, 195]
 
 let foods = toMenu(names, values, calories)
-testGreedys(foods, 1000)
+testGreedys(foods, 750)
+echo ""
+testMaxVal(foods, 750)
