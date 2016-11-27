@@ -88,4 +88,4 @@ let items =
 let list = toList(items)
 
 for i, k in yieldAllCombos(list):
-  echo "Bag 1: ", i, " Bag 2: ", k
+  echo "Bag 1: ", i, ", Bag 2: ", k
