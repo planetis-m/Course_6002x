@@ -77,7 +77,7 @@ iterator yieldAllCombos(items: List): (List, List) =
 # Course Code
 # -----------
 
-let list =
+let items =
   @[("clock", 175, 10),
   ("painting", 90, 9),
   ("radio", 20, 4),
@@ -85,7 +85,7 @@ let list =
   ("book", 10, 1),
   ("computer", 200, 20)]
 
-let items = toList(list)
+let list = toList(items)
 
-for i, k in yieldAllCombos(items):
+for i, k in yieldAllCombos(list):
   echo "Bag 1: ", i, " Bag 2: ", k
