@@ -1,4 +1,4 @@
-import tables
+import tables, hashes
 
 # ------------------
 # Node type routines
@@ -14,6 +14,10 @@ proc newNode(name: string): Node =
 
 proc getName(n: Node): string =
   result = n.name
+
+proc hash(n: Node): Hash =
+  result = hash(n.name)
+  result = !$result
 
 proc `$`(n: Node): string =
   result = n.name
@@ -48,9 +52,6 @@ type
     edges: Table[Node, seq[Node]]
 
 
-proc newDigraph(): Digraph =
-  result = Digraph(edges: initTable[Node, seq[Node]]())
-
 template exists(key: untyped): untyped {.dirty.} =
   d.edges.hasKey(key)
 
@@ -59,6 +60,9 @@ template modify(key: untyped): untyped {.dirty.} =
 
 template `!`(field: untyped): untyped {.dirty.} =
   edge.field
+
+proc newDigraph(): Digraph =
+  result = Digraph(edges: initTable[Node, seq[Node]]())
 
 proc addNode(d: var Digraph; node: Node) =
   if exists(node):
