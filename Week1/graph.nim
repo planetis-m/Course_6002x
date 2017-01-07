@@ -51,12 +51,21 @@ type
 proc newDigraph(): Digraph =
   result = Digraph(edges: initTable[Node, seq[Node]]())
 
+template exists(key: untyped): untyped {.dirty.} =
+  d.edges.hasKey(key)
+
+template modify(key: untyped): untyped {.dirty.} =
+  d.edges[key]
+
+template `!`(field: untyped): untyped {.dirty.} =
+  edge.field
+
 proc addNode(d: var Digraph; node: Node) =
-  if d.edges.hasKey(node):
+  if exists(node):
     raise newException(ValueError, "Duplicate node")
-  d.edges[node] = @[]
+  modify(node) = @[]
 
 proc addEdge(d: var Digraph; edge: Edge) =
-  if not (d.edges.hasKey(edge.src) and d.edges.hasKey(edge.dest)):
+  if not (exists(!src) and exists(!dest)):
     raise newException(ValueError, "Node not in graph")
-  d.edges[edge.src].add(edge.dest)
+  modify(!src).add(!dest)
