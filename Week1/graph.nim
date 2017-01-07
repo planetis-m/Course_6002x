@@ -55,7 +55,7 @@ type
 template exists(key: untyped): untyped {.dirty.} =
   d.edges.hasKey(key)
 
-template modify(key: untyped): untyped {.dirty.} =
+template access(key: untyped): untyped {.dirty.} =
   d.edges[key]
 
 template `!`(field: untyped): untyped {.dirty.} =
@@ -67,9 +67,9 @@ proc newDigraph(): Digraph =
 proc addNode(d: var Digraph; node: Node) =
   if exists(node):
     raise newException(ValueError, "Duplicate node")
-  modify(node) = @[]
+  access(node) = @[]
 
 proc addEdge(d: var Digraph; edge: Edge) =
   if not (exists(!src) and exists(!dest)):
     raise newException(ValueError, "Node not in graph")
-  modify(!src).add(!dest)
+  access(!src).add(!dest)
