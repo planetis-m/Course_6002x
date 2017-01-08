@@ -8,7 +8,7 @@ type
 # Node type routines
 # ------------------
 
-proc newNode(name: string): Node =
+proc initNode(name: string): Node =
   result = Node(name: name)
 
 proc getName(n: Node): string =
@@ -30,7 +30,7 @@ type
 # Edge type routines
 # ------------------
 
-proc newEdge(src, dest: Node): Edge =
+proc initEdge(src, dest: Node): Edge =
   result = Edge(src: src, dest: dest)
 
 proc getSource(e: Edge): Node =
@@ -52,9 +52,6 @@ type
 # Digraph type routines
 # ---------------------
 
-proc newDigraph(): Digraph =
-  result = Digraph(edges: initTable[Node, seq[Node]]())
-
 proc addNode(d: var Digraph; node: Node) =
   if d.edges.hasKey(node):
     raise newException(ValueError, "Duplicate node")
@@ -73,20 +70,26 @@ proc hasNode(d: Digraph; node: Node): bool =
   result = d.edges.hasKey(node)
 
 proc getNode(d: Digraph; name: string): Node =
-  let n = newNode(name)
+  let n = initNode(name)
   assert d.edges.hasKey(n)
   result = n
+
+proc `$`(d: Digraph): string =
+  result = ""
+  for src, dests in d.edges:
+    for dest in dests:
+      result &= $src & "->" & $dest & "\n"
 
 # -------------------
 # Graph type routines
 # -------------------
 
-proc newGraph(): Graph =
-  result = Graph(edges: initTable[Node, seq[Node]]())
+proc initGraph(T: typedesc[Graph | Digraph]): T =
+  result = T(edges: initTable[Node, seq[Node]]())
 
 proc addEdge(g: var Graph; edge: Edge) =
   addEdge[Digraph](g, edge)
-  let rev = newEdge(edge.dest, edge.src)
+  let rev = initEdge(edge.dest, edge.src)
   addEdge[Digraph](g, rev)
 
 proc `$`(g: Graph): string =
@@ -96,20 +99,20 @@ proc `$`(g: Graph): string =
       result &= $src & "->" & $dest & "\n"
 
 
-proc buildCityGraph(): Graph =
-  result = newGraph()
+proc buildCityGraph(T: typedesc[Graph | Digraph]): T =
+  result = initGraph(T)
   for name in ["Boston", "Providence", "New York", "Chicago",
               "Denver", "Phoenix", "Los Angeles"]:
-    result.addNode(newNode(name))
+    result.addNode(initNode(name))
 
-  result.addEdge(newEdge(newNode("Boston"), newNode("Providence")))
-  result.addEdge(newEdge(newNode("Boston"), newNode("New York")))
-  result.addEdge(newEdge(newNode("Providence"), newNode("Boston")))
-  result.addEdge(newEdge(newNode("Providence"), newNode("New York")))
-  result.addEdge(newEdge(newNode("New York"), newNode("Chicago")))
-  result.addEdge(newEdge(newNode("Chicago"), newNode("Denver")))
-  result.addEdge(newEdge(newNode("Denver"), newNode("Phoenix")))
-  result.addEdge(newEdge(newNode("Denver"), newNode("New York")))
-  result.addEdge(newEdge(newNode("Los Angeles"), newNode("Boston")))
+  result.addEdge(initEdge(initNode("Boston"), initNode("Providence")))
+  result.addEdge(initEdge(initNode("Boston"), initNode("New York")))
+  result.addEdge(initEdge(initNode("Providence"), initNode("Boston")))
+  result.addEdge(initEdge(initNode("Providence"), initNode("New York")))
+  result.addEdge(initEdge(initNode("New York"), initNode("Chicago")))
+  result.addEdge(initEdge(initNode("Chicago"), initNode("Denver")))
+  result.addEdge(initEdge(initNode("Denver"), initNode("Phoenix")))
+  result.addEdge(initEdge(initNode("Denver"), initNode("New York")))
+  result.addEdge(initEdge(initNode("Los Angeles"), initNode("Boston")))
 
-echo buildCityGraph()
+echo buildCityGraph(Digraph)
