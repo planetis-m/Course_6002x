@@ -48,6 +48,9 @@ type
     edges: Table[Node, seq[Node]]
   Graph = ref object of Digraph
 
+proc initGraph(T: typedesc[Graph | Digraph]): T =
+  result = T(edges: initTable[Node, seq[Node]]())
+
 # ---------------------
 # Digraph type routines
 # ---------------------
@@ -84,19 +87,10 @@ proc `$`(d: Digraph): string =
 # Graph type routines
 # -------------------
 
-proc initGraph(T: typedesc[Graph | Digraph]): T =
-  result = T(edges: initTable[Node, seq[Node]]())
-
 proc addEdge(g: Graph; edge: Edge) =
   Digraph(g).addEdge(edge)
   let rev = initEdge(edge.dest, edge.src)
   Digraph(g).addEdge(rev)
-
-proc `$`(g: Graph): string =
-  result = ""
-  for src, dests in g.edges:
-    for dest in dests:
-      result &= $src & "->" & $dest & "\n"
 
 
 proc buildCityGraph(T: typedesc[Graph | Digraph]): T =
