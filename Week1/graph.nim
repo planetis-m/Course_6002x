@@ -44,20 +44,20 @@ proc `$`(e: Edge): string =
 
 
 type
-  Digraph = object of RootObj
+  Digraph = ref object of RootObj
     edges: Table[Node, seq[Node]]
-  Graph = object of Digraph
+  Graph = ref object of Digraph
 
 # ---------------------
 # Digraph type routines
 # ---------------------
 
-proc addNode(d: var Digraph; node: Node) =
+proc addNode(d: Digraph; node: Node) =
   if d.edges.hasKey(node):
     raise newException(ValueError, "Duplicate node")
   d.edges[node] = @[]
 
-proc addEdge[T: Digraph](d: var T; edge: Edge) =
+proc addEdge(d: Digraph; edge: Edge) =
   if not (d.edges.hasKey(edge.src) and d.edges.hasKey(edge.dest)):
     raise newException(ValueError, "Node not in graph")
   d.edges[edge.src].add(edge.dest)
@@ -87,10 +87,10 @@ proc `$`(d: Digraph): string =
 proc initGraph(T: typedesc[Graph | Digraph]): T =
   result = T(edges: initTable[Node, seq[Node]]())
 
-proc addEdge(g: var Graph; edge: Edge) =
-  addEdge[Digraph](g, edge)
+proc addEdge(g: Graph; edge: Edge) =
+  Digraph(g).addEdge(edge)
   let rev = initEdge(edge.dest, edge.src)
-  addEdge[Digraph](g, rev)
+  Digraph(g).addEdge(rev)
 
 proc `$`(g: Graph): string =
   result = ""
@@ -115,4 +115,4 @@ proc buildCityGraph(T: typedesc[Graph | Digraph]): T =
   result.addEdge(initEdge(initNode("Denver"), initNode("New York")))
   result.addEdge(initEdge(initNode("Los Angeles"), initNode("Boston")))
 
-echo buildCityGraph(Digraph)
+echo buildCityGraph(Graph)
