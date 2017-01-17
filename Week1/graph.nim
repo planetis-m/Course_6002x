@@ -93,6 +93,13 @@ proc addEdge(g: Graph; edge: Edge) =
   Digraph(g).addEdge(rev)
 
 
+proc `$`[T](path: seq[T]): string =
+  result = ""
+  for i in 0 .. <path.len:
+    result &= $path[i]
+    if i != len(path) - 1:
+      result &= "->"
+
 proc buildCityGraph(T: typedesc[Graph | Digraph]): T =
   result = initGraph(T)
   for name in ["Boston", "Providence", "New York", "Chicago",
@@ -104,9 +111,42 @@ proc buildCityGraph(T: typedesc[Graph | Digraph]): T =
   result.addEdge(initEdge(initNode("Providence"), initNode("Boston")))
   result.addEdge(initEdge(initNode("Providence"), initNode("New York")))
   result.addEdge(initEdge(initNode("New York"), initNode("Chicago")))
+  result.addEdge(initEdge(initNode("Chicago"), initNode("Phoenix")))
   result.addEdge(initEdge(initNode("Chicago"), initNode("Denver")))
   result.addEdge(initEdge(initNode("Denver"), initNode("Phoenix")))
   result.addEdge(initEdge(initNode("Denver"), initNode("New York")))
   result.addEdge(initEdge(initNode("Los Angeles"), initNode("Boston")))
 
-echo buildCityGraph(Graph)
+
+proc dfs(graph: Digraph; start, finish: Node; path, shortest = newSeq[Node]()): seq[Node] =
+  var path = path & @[start]
+  var shortest = shortest
+  echo("Current DFS path: ", path)
+  if start == finish:
+    return path
+  for node in graph.childrenOf(start):
+    if $start == "Boston": echo node
+    if node notin path:
+      if $start == "Boston": echo node
+      if len(shortest) == 0 or len(path) < len(shortest):
+        let newPath = dfs(graph, node, finish, path, shortest)
+        if newPath.len != 0:
+          shortest = newPath
+    else:
+      echo("Already visited ", node)
+  result = shortest
+
+proc shortestPath(graph: Digraph; start, finish: Node): seq[Node] =
+  result = dfs(graph, start, finish)
+
+proc testSP(source, destination: string) =
+  let g = buildCityGraph(Digraph)
+  let sp = shortestPath(g, initNode(source), initNode(destination))
+  if len(sp) != 0:
+    echo("Shortest path from ", source, " to ",
+         destination, " is ", sp)
+  else:
+    echo("There is no path from ", source, " to ", destination)
+
+testSP("Boston", "Phoenix")
+# Correct: Boston->New York->Chicago->Phoenix
