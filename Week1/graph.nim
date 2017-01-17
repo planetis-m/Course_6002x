@@ -1,4 +1,4 @@
-import tables, hashes
+import tables, hashes, deques
 
 type
   Node = object
@@ -135,6 +135,25 @@ proc dfs(graph: Digraph; start, finish: Node; path, shortest = newSeq[Node]()): 
     else:
       echo("Already visited ", node)
   result = shortest
+
+proc bfs(graph: Digraph, start, finish: Node): seq[Node] =
+  ## Returns a shortest path from start to end in graph
+  result = @[]
+  var initPath = @[start]
+  var pathQueue = initDeque[seq[Node]]()
+  pathQueue.addFirst(initPath)
+  while len(pathQueue) != 0:
+    #Get and remove oldest element in pathQueue
+    let tmpPath = pathQueue.popFirst()
+    echo("Current BFS path: ", tmpPath)
+    let lastNode = tmpPath[^1]
+    if lastNode == finish:
+      return tmpPath
+    for nextNode in graph.childrenOf(lastNode):
+      if nextNode notin tmpPath:
+        let newPath = tmpPath & @[nextNode]
+        pathQueue.addLast(newPath)
+
 
 proc shortestPath(graph: Digraph; start, finish: Node): seq[Node] =
   result = dfs(graph, start, finish)
