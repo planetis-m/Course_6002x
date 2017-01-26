@@ -29,17 +29,23 @@ proc distFrom(self, other: Location): float =
   sqrt(pow(xDist, 2.0) + pow(yDist, 2.0))
 
 type
-  Drunk = object of RootObj
+  DrunkKind = enum
+    UsualDk, ColdDk
+  Drunk = object
     name: string
-  UsualDrunk = object of Drunk
-  ColdDrunk = object of Drunk
+    stepChoices: array[4, (float, float)]
 
 # -------------------
 # Drunk type routines
 # -------------------
 
-proc initDrunk(dClass: typedesc[Drunk]; name: string): dClass =
-  result = dClass(name: name)
+proc initDrunk(dEnum: DrunkKind; name: string): Drunk =
+  case dEnum
+  of UsualDk:
+    result.stepChoices = [(0.0, 1.0), (0.0, -1.0), (1.0, 0.0), (-1.0, 0.0)]
+  of ColdDk:
+    result.stepChoices = [(0.0, 0.9), (0.0, -1.1), (1.0, 0.0), (-1.0, 0.0)]
+  result.name = name
 
 proc hash(self: Drunk): Hash =
   result = hash(self.name)
@@ -48,17 +54,8 @@ proc hash(self: Drunk): Hash =
 proc `$`(self: Drunk): string =
   result = "This drunk is named " & self.name
 
-method takeStep(self: Drunk): auto {.base.} =
-  echo("Called takeStep base method")
-  result = (0.0, 0.0)
-
-method takeStep(self: UsualDrunk): auto =
-  let stepChoices = [(0.0, 1.0), (0.0, -1.0), (1.0, 0.0), (-1.0, 0.0)]
-  result = random(stepChoices)
-
-method takeStep(self: ColdDrunk): auto =
-  let stepChoices = [(0.0, 0.9), (0.0, -1.1), (1.0, 0.0), (-1.0, 0.0)]
-  result = random(stepChoices)
+proc takeStep(self: Drunk): auto =
+  result = random(self.stepChoices)
 
 
 type
@@ -101,10 +98,10 @@ proc walk(f: var Field; d: Drunk; numSteps: int): float =
     f.moveDrunk(d)
   result = start.distFrom(f.getLoc(d))
 
-proc simWalks(numSteps, numTrials: int; dClass: typedesc[Drunk]): seq[float] =
+proc simWalks(numSteps, numTrials: int; dEnum: DrunkKind): seq[float] =
   ## Simulates numTrials walks of numSteps steps each.
   ## Returns a list of the final distances for each trial
-  let homer = initDrunk(dClass, "Homer")
+  let homer = initDrunk(dEnum, "Homer")
   let origin = initLocation(0.0, 0.0)
   result = @[]
   for t in 1 .. numTrials:
@@ -112,15 +109,22 @@ proc simWalks(numSteps, numTrials: int; dClass: typedesc[Drunk]): seq[float] =
     f.addDrunk(homer, origin)
     result.add(round(walk(f, homer, numSteps), 1))
 
-proc drunkTest(walkLengths: openArray[int]; numTrials: int; dClass: typedesc[Drunk]) =
+proc drunkTest(walkLengths: openarray[int]; numTrials: int; dEnum: DrunkKind) =
   ## For each number of steps in walkLengths, runs simWalks with
   ## numTrials walks and prints results
   for numSteps in walkLengths:
-    let distances = simWalks(numSteps, numTrials, dClass)
-    echo("Random walk of ", numSteps, " steps")
+    let distances = simWalks(numSteps, numTrials, dEnum)
+    echo(dEnum, " random walk of ", numSteps, " steps")
     echo(" Mean = ", round(sum(distances)/len(distances).float, 1))
     echo(" Max = ", max(distances), " Min = ", min(distances))
 
+# drunkTest([10, 1000, 1000, 10000], 100, UsualDk)
+
+proc simAll(drunkKinds: set[DrunkKind], walkLengths: openarray[int], numTrials: int) =
+  for dEnum in drunkKinds:
+    drunkTest(walkLengths, numTrials, dEnum)
+
 
 randomize()
-drunkTest([10, 1000, 1000, 10000], 100, UsualDrunk)
+simAll({UsualDk, ColdDk},
+       [1, 10, 100, 1000, 10000], 100)
