@@ -1,4 +1,4 @@
-import osproc, os, streams, times, math, random, strutils
+import osproc, os, streams, strutils
 
 ## Importing this module will start gnuplot. Array contents are written
 ## to temporary files (in /tmp) and then loaded by gnuplot. The temporary
@@ -34,7 +34,8 @@ proc plotCmd(): string =
   if nplots == 0: "plot " else: "replot "
 
 proc tmpFilename(): string =
-  "/tmp/" & $epochTime() & "-" & $random(1000) & ".tmp"
+  let pname = getAppFilename().extractFilename()
+  getCurrentDir() / "tmp-" & pname & "-" & $nplots & ".dat"
 
 proc cmd*(cmd: string) =
   echo cmd
@@ -138,6 +139,6 @@ proc plot*[X, Y](xs: openarray[X],
     quit 1
   sendPlot("\"" & fname & "\"", title, " using 1:2")
 
-proc set_style*(s : Style) =
+proc set_style*(s: Style) =
   ## set plotting style
   style = s
