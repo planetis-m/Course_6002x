@@ -15,5 +15,4 @@ plot(samples, cubic, "Cubic Plot")
 plot(samples, exponential, "Exponential Plot")
 
 cmd "unset multiplot"
-
 discard readChar stdin
