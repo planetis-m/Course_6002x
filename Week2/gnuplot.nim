@@ -1,4 +1,4 @@
-import osproc, os, streams, strutils
+import osproc, os, streams, times, random, strutils
 
 ## Importing this module will start gnuplot. Array contents are written
 ## to temporary files (in /tmp) and then loaded by gnuplot. The temporary
@@ -34,8 +34,7 @@ proc plotCmd(): string =
   if nplots == 0: "plot " else: "replot "
 
 proc tmpFilename(): string =
-  let pname = getAppFilename().extractFilename()
-  getCurrentDir() / "tmp-" & pname & "-" & $nplots & ".dat"
+  "/tmp/" & $epochTime() & "-" & $random(1000) & ".tmp"
 
 proc cmd*(cmd: string) =
   echo cmd
@@ -128,6 +127,9 @@ proc plot*[X, Y](xs: openarray[X],
   ##       Y[i] = f * cos(f)
   ##
   ##   plot X, Y, "spiral"
+  if xs.len != ys.len:
+    raise newException(ValueError, "xs and ys must have same length")
+
   let fname = tmpFilename()
   try:
     let f = open(fname, fmWrite)
