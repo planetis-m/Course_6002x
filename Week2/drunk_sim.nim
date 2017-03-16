@@ -30,7 +30,7 @@ proc distFrom(self, other: Location): float =
 
 type
   DrunkKind = enum
-    UsualDk, ColdDk
+    UsualDk = "Usual Drunk", ColdDk = "Cold Drunk"
   Drunk = object
     name: string
     stepChoices: array[4, (float, float)]
