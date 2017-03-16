@@ -1,4 +1,5 @@
-import algorithm
+import algorithm, tables, random
+
 # ----------------
 # type definitions
 # ----------------
@@ -104,6 +105,48 @@ proc testMaxVal(foods: Menu, maxUnits: int) =
   for item in taken:
     echo("   ", item)
 
+# -------------------
+# Dynamic Programming
+# -------------------
+
+proc buildLargeMenu(numItems, maxVal, maxCost: int): Menu =
+  result = initMenu(numItems)
+  for i in 0 .. <numItems:
+    result[i] = newFood($i, random(1..maxVal+1), random(1..maxCost+1))
+
+proc fastMaxVal(toConsider: Menu, avail: int, memo = newTable[(int, int), (int, Menu)]()): (int, Menu) =
+  # Assumes toConsider a list of items, avail a weight
+  # Returns a tuple of the total value of a solution to the
+  # 0/1 knapsack problem and the items of that solution
+  if memo.hasKey((toConsider.len, avail)):
+    result = memo[(toConsider.len, avail)]
+  elif toConsider.len == 0 or avail == 0:
+    result = (0, nil)
+  elif toConsider[0].getCost() > avail:
+    #Explore right branch only
+    result = fastMaxVal(toConsider[1..^1], avail, memo)
+  else:
+    let nextItem = toConsider[0]
+    #Explore left branch
+    var (withVal, withToTake) = fastMaxVal(toConsider[1..^1],
+                                  avail - nextItem.getCost(), memo)
+    withVal += nextItem.getValue()
+    #Explore right branch
+    let (withoutVal, withoutToTake) = fastMaxVal(toConsider[1..^1], avail, memo)
+    #Choose better branch
+    if withVal > withoutVal:
+      result = (withVal, withToTake & nextItem)
+    else:
+      result = (withoutVal, withoutToTake)
+    memo[(toConsider.len, avail)] = result
+
+proc testFastMaxVal(foods: Menu, maxUnits: int) =
+  echo("Use search tree to allocate ", maxUnits, " calories")
+  let (val, taken) = fastMaxVal(foods, maxUnits)
+  echo("Total value of items taken = ", val)
+  for item in taken:
+    echo("   ", item)
+
 # -----------
 # Course Code
 # -----------
@@ -114,7 +157,10 @@ let names = @["wine", "beer", "pizza", "burger", "fries",
 let values = @[89, 90, 95, 100, 90, 79, 50, 10]
 let calories = @[123, 154, 258, 354, 365, 150, 95, 195]
 
-let foods = toMenu(names, values, calories)
-testGreedys(foods, 750)
-echo ""
-testMaxVal(foods, 750)
+# let foods = toMenu(names, values, calories)
+# testGreedys(foods, 750)
+# echo ""
+# testMaxVal(foods, 750)
+
+let items = buildLargeMenu(50, 90, 250)
+testFastMaxVal(items, 750)
