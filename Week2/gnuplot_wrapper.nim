@@ -1,4 +1,4 @@
-import osproc, os, streams, strutils
+import osproc, os, streams
 
 ## Importing this module will start gnuplot. Array contents are written
 ## to temporary files (in /tmp) and then loaded by gnuplot. The temporary
@@ -8,6 +8,7 @@ import osproc, os, streams, strutils
 type
   Figure = object
     gp: Process
+    pid: int
     nplots: int
 
 proc startGnuplot(): Figure =
@@ -17,6 +18,7 @@ proc startGnuplot(): Figure =
     raise newException(IOError, "Cannot find gnuplot: exe not in PATH")
   try:
     result.gp = startProcess(gnuplot_exe, args = ["-p"])
+    result.pid = processID(result.gp)
   except:
     echo "Error: Couldn't start " & gnuplot_exe
     raise
@@ -30,7 +32,7 @@ proc plotCmd(replot: bool): string =
     result = "plot "
 
 proc tmpFilename(): string =
-  getTempDir() & "gnuplotnim_" & $gFigure.nplots & ".tmp"
+  getTempDir() & "gnuplotnim_" & $gFigure.pid & "_" & $gFigure.nplots & ".tmp"
 
 proc cmd*(cmd: string) =
   ## Send a command to gnuplot
@@ -58,24 +60,23 @@ template plotDataImpl(arg, extra: typed) =
   cmd(line)
   gFigure.nplots += 1
 
+template withTemp(f, fn, mode, actions: untyped): untyped =
+  let fn = tmpFilename()
+  var f = newFileStream(fname, mode)
+  if isNil(f):
+    raise newException(IOError,
+        "Cannot open temporary file: " & fn)
+  try:
+    actions
+  finally:
+    close(f)
+
 proc plot*(equation: string, title = "", replot = true) =
   ## Plot an equation as understood by gnuplot. e.g.:
   ##
   ## .. code-block:: nim
   ##   plot "sin(x)/x"
   plotFunctionImpl()
-
-template withTemp(f, fn, mode, actions: untyped): untyped =
-  let fn = tmpFilename()
-  var f: File
-  if open(f, fname, mode):
-    try:
-      actions
-    finally:
-      close(f)
-  else:
-    raise newException(IOError,
-        "Cannot open temporary file: " & fn)
 
 proc plot*[X: SomeReal](xs: openarray[X],
           title = "", replot = true) =
