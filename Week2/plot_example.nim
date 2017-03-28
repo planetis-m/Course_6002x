@@ -1,4 +1,4 @@
-import gnuplot_wrapper, math, sequtils, os
+import gnuplot_wrapper, math, sequtils
 
 let
   samples = toSeq(0..29)
