@@ -13,7 +13,7 @@ iterator get_partitions_ordered*[T](s: openArray[T]): seq[seq[T]] =
       # check whether to "break off" a new subset
       if (1 shl position and partition_index) > 0 or position == n:
         partition.add(subset)
-        subset = @[]
+        subset.setLen(0)
     yield partition
 
 iterator get_partitions*[T](s: openArray[T]): seq[seq[T]] =

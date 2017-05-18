@@ -25,7 +25,7 @@ proc loadCows(filename: string): Table[string, int] =
 
 
 # Problem 1
-proc greedyCowTransport(cows: Table[string, int]; limit = 10): seq[seq[]] =
+proc greedyCowTransport(cows: Table[string, int]; limit = 10): seq[seq[string]] =
     # Uses a greedy heuristic to determine an allocation of cows that attempts to
     # minimize the number of spaceship trips needed to transport all the cows. The
     # returned allocation of cows may or may not be optimal.
@@ -50,7 +50,7 @@ proc greedyCowTransport(cows: Table[string, int]; limit = 10): seq[seq[]] =
 
 
 # Problem 2
-proc bruteForceCowTransport(cows: Table[string, int]; limit = 10):
+proc bruteForceCowTransport(cows: Table[string, int]; limit = 10): seq[seq[string]] =
     # Finds the allocation of cows that minimizes the number of spaceship trips
     # via brute force.  The brute force algorithm should follow the following method:
     #
@@ -73,7 +73,7 @@ proc bruteForceCowTransport(cows: Table[string, int]; limit = 10):
 
 
 # Problem 3
-proc compareCowTransportAlgorithms():
+proc compareCowTransportAlgorithms() =
 
     # Using the data from ps1_cow_data.txt and the specified weight limit, run your
     # greedy_cow_transport and brute_force_cow_transport functions here. Use the
