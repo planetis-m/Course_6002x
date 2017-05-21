@@ -25,7 +25,7 @@ proc newRoulette(rEnum: RouletteKind): Roulette =
   result.pockets = @[]
   for i in WheelRange:
     result.pockets.add(i)
-
+  result.kind = rEnum
   result.ball = 0
   result.blackOdds = 1.0
   result.redOdds = 1.0
@@ -90,6 +90,14 @@ proc findPocketReturn(game: Roulette, numTrials: int, trialSize: int, toPrint: b
     let trialVals = playRoulette(game, trialSize, toPrint)
     result.add(trialVals[2])
 
+proc getMeanAndStd(xa: seq[float]): auto =
+  let mean = sum(xa)/float(len(xa))
+  var tot = 0.0
+  for x in xa:
+    tot += pow(x - mean, 2.0)
+  let std = pow(tot/float(len(xa)), 0.5)
+  (mean, std)
+
 proc simAll(rouletteKinds: set[RouletteKind], gameLengths: openarray[int], numTrials: int) =
   for numSpins in gameLengths:
     echo("\nSimulate betting a pocket for ", numTrials,
@@ -97,8 +105,12 @@ proc simAll(rouletteKinds: set[RouletteKind], gameLengths: openarray[int], numTr
     for rEnum in rouletteKinds:
       let game = newRoulette(rEnum)
       let pocketReturns = game.findPocketReturn(numTrials, numSpins, false)
-      echo("Exp. return for ", game.kind, " = ",
-            $(100*sum(pocketReturns)/len(pocketReturns).float) & "%")
+      # echo("Exp. return for ", game.kind, " = ",
+      #       $(100*sum(pocketReturns)/len(pocketReturns).float) & "%")
+      let (mean, std) = getMeanAndStd(pocketReturns)
+      echo("Exp. return for ", game.kind, " = ", $(round(100*mean, 3)),
+            "%, ", "+/- ", $(round(100*1.96*std, 3)),
+            "% with 95% confidence")
 
 simAll({Fair, European, American},
        [100, 1000, 10000, 100000], 20)
