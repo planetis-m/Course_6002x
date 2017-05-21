@@ -2,13 +2,8 @@ import math
 
 
 proc stdDevOfLengths(a: openArray[string]): float =
-  # a: a list of strings
-
-  # returns: float, the standard deviation of the lengths of the strings,
-  #  or NaN if L is empty.
-
-  if a.len == 0:
-    return NaN
+  ## returns: float, the standard deviation of the lengths of the strings,
+  assert a.len != 0
   # compute mean first
   var sumVals = 0
   for s in a:
@@ -23,6 +18,10 @@ proc stdDevOfLengths(a: openArray[string]): float =
   pow(variance, 0.5)
 
 
-echo stdDevOfLengths([])
-echo stdDevOfLengths(["a", "z", "p"])
-echo stdDevOfLengths(["apples", "oranges", "kiwis", "pineapples"])
+template testFloatRes(retValue, expValue: typed): untyped =
+  const E = 1e-6
+  assert abs(retValue - expValue) <= E
+
+testFloatRes(stdDevOfLengths(["a", "z", "p"]), 0.0)
+testFloatRes(stdDevOfLengths(["apples", "oranges", "kiwis", "pineapples"]), 1.870828693)
+testFloatRes(stdDevOfLengths(["dafcymuwe", "niuxmesszqejlo"]), 2.5)
