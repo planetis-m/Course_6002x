@@ -20,7 +20,7 @@ proc stdDevOfLengths(a: openArray[string]): float =
 
 template testFloatRes(retValue, expValue: typed): untyped =
   const E = 1e-6
-  assert abs(retValue - expValue) <= E
+  assert abs(retValue - expValue) < E
 
 testFloatRes(stdDevOfLengths(["a", "z", "p"]), 0.0)
 testFloatRes(stdDevOfLengths(["apples", "oranges", "kiwis", "pineapples"]), 1.870828693)
