@@ -6,6 +6,7 @@ type
     Fair = "Fair Roulette"
     European = "European Roulette"
     American = "American Roulette"
+
   Roulette = ref object
     kind: RouletteKind
     pockets: seq[int]
@@ -14,6 +15,7 @@ type
 
 proc newRoulette(rEnum: RouletteKind): Roulette =
   new(result)
+
   var WheelRange: Slice[int]
   case rEnum
   of Fair:
@@ -22,9 +24,11 @@ proc newRoulette(rEnum: RouletteKind): Roulette =
     WheelRange = 1..37
   of American:
     WheelRange = 1..38
+
   result.pockets = @[]
   for i in WheelRange:
     result.pockets.add(i)
+
   result.kind = rEnum
   result.ball = 0
   result.blackOdds = 1.0
@@ -56,13 +60,13 @@ proc betRed(self: Roulette, amt: float): float =
     amt*self.redOdds
   else: -amt*self.redOdds
 
-proc betPocket(self: Roulette, pocket: string, amt: float): float =
-  if pocket == $self.ball:
+proc betPocket(self: Roulette, pocket: int, amt: float): float =
+  if pocket == self.ball:
     amt*self.pocketOdds
   else: -amt
 
 proc playRoulette(game: Roulette, numSpins: int, toPrint = true): auto =
-  let luckyNumber = "2"
+  let luckyNumber = 2
   let bet = 1
   var totRed, totBlack, totPocket = 0.0
   for _ in 1 .. numSpins:
