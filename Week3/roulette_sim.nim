@@ -58,7 +58,7 @@ proc betBlack(self: Roulette, amt: float): float =
 proc betRed(self: Roulette, amt: float): float =
   if self.isRed():
     amt*self.redOdds
-  else: -amt*self.redOdds
+  else: -amt
 
 proc betPocket(self: Roulette, pocket: int, amt: float): float =
   if pocket == self.ball:
@@ -67,13 +67,13 @@ proc betPocket(self: Roulette, pocket: int, amt: float): float =
 
 proc playRoulette(game: Roulette, numSpins: int, toPrint = true): auto =
   let luckyNumber = 2
-  let bet = 1
+  let bet = 1.0
   var totRed, totBlack, totPocket = 0.0
   for _ in 1 .. numSpins:
     game.spin()
-    totRed += game.betRed(bet.float)
-    totBlack += game.betBlack(bet.float)
-    totPocket += game.betPocket(luckyNumber, bet.float)
+    totRed += game.betRed(bet)
+    totBlack += game.betBlack(bet)
+    totPocket += game.betPocket(luckyNumber, bet)
   if toPrint:
     echo(numSpins, " spins of ", game.kind)
     echo("Expected return betting red = ",
