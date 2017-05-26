@@ -16,14 +16,13 @@ type
 proc newRoulette(rEnum: RouletteKind): Roulette =
   new(result)
 
-  var WheelRange: Slice[int]
-  case rEnum
-  of Fair:
-    WheelRange = 1..36
-  of European:
-    WheelRange = 1..37
-  of American:
-    WheelRange = 1..38
+  let WheelRange = case rEnum
+    of Fair:
+      1..36
+    of European:
+      1..37
+    of American:
+      1..38
 
   result.pockets = @[]
   for i in WheelRange:
