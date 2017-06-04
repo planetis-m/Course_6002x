@@ -30,7 +30,8 @@ proc distFrom(self, other: Location): float =
 
 type
   DrunkKind = enum
-    UsualDk = "Usual Drunk", ColdDk = "Cold Drunk"
+    UsualDk = "Usual Drunk"
+    ColdDk = "Cold Drunk"
   Drunk = object
     name: string
     stepChoices: array[4, (float, float)]
@@ -124,7 +125,28 @@ proc simAll(drunkKinds: set[DrunkKind], walkLengths: openarray[int], numTrials: 
   for dEnum in drunkKinds:
     drunkTest(walkLengths, numTrials, dEnum)
 
+# simAll({UsualDk, ColdDk},
+#        [1, 10, 100, 1000, 10000], 100)
+
+proc simDrunk(walkLengths: openarray[int]; numTrials: int; dEnum: DrunkKind): seq[float] =
+  ## Same as drunkTest, returns the mean of the trials
+  result = @[]
+  for numSteps in walkLengths:
+    echo("Starting simulation of ", numSteps, " steps")
+    let trials = simWalks(numSteps, numTrials, dEnum)
+    let mean = sum(trials)/len(trials).float
+    result.add(mean)
+
+proc simAllToFile(drunkKinds: set[DrunkKind], walkLengths: openarray[int], numTrials: int) =
+  let fs = open("plotting-means.dat", fmWrite)
+  for dEnum in drunkKinds:
+    let means = simDrunk(walkLengths, numTrials, dEnum)
+    for i in 0 .. <walkLengths.len:
+      fs.writeLine(walkLengths[i], " ", means[i])
+    fs.write("\n\n")
+  fs.close()
+
 
 randomize()
-simAll({UsualDk, ColdDk},
-       [1, 10, 100, 1000, 10000], 100)
+simAllToFile({UsualDk, ColdDk},
+             [1, 10, 100, 1000, 10000], 100)
