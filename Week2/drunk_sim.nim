@@ -147,7 +147,34 @@ proc simAllToFile(drunkKinds: set[DrunkKind], walkLengths: openarray[int], numTr
     fs.write("\n\n")
   fs.close()
 
+# simAllToFile({UsualDk, ColdDk},
+#              [1, 10, 100, 1000, 10000], 100)
 
-randomize()
-simAllToFile({UsualDk, ColdDk},
-             [1, 10, 100, 1000, 10000], 100)
+proc getFinalLocs(numSteps, numTrials: int; dEnum: DrunkKind): seq[Location] =
+  result = @[]
+  let d = initDrunk(dEnum, "")
+  let origin = initLocation(0.0, 0.0)
+  for t in 1 .. numTrials:
+    var f = initField()
+    f.addDrunk(d, origin)
+    for s in 1 .. numSteps:
+      f.moveDrunk(d)
+    result.add(f.getLoc(d))
+
+proc plotLocs(drunkKinds: set[DrunkKind], numSteps, numTrials: int) =
+  let fs = open("plotting-locations.dat", fmWrite)
+  for dEnum in drunkKinds:
+    let locs = getFinalLocs(numSteps, numTrials, dEnum)
+    var xVals, yVals = newSeq[float]()
+    for loc in locs:
+      xVals.add(loc.getX)
+      yVals.add(loc.getY)
+    # let meanX = sum(abs(xVals))/len(xVals).float
+    # let meanY = sum(abs(yVals))/len(yVals).float
+    for i in 0 .. <numTrials:
+      fs.writeLine(xVals[i], " ", yVals[i])
+    fs.write("\n\n")
+  fs.close()
+
+
+plotLocs({UsualDk, ColdDk}, 10000, 1000)
