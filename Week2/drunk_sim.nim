@@ -11,6 +11,10 @@ type
 proc initLocation(x, y: float): Location =
   result = Location(x: x, y: y)
 
+proc hash(self: Location): Hash =
+  result = hash(self.x) !& hash(self.y)
+  result = !$result
+
 proc getX(self: Location): float =
   result = self.x
 
@@ -60,17 +64,18 @@ proc takeStep(self: Drunk): auto =
 
 
 type
-  Field = object
+  Field = ref object of RootObj
     drunks: Table[Drunk, Location]
 
 # -------------------
 # Field type routines
 # -------------------
 
-proc initField(): Field =
-  result = Field(drunks: initTable[Drunk, Location]())
+proc newField(): Field =
+  new(result)
+  result.drunks = initTable[Drunk, Location]()
 
-proc addDrunk(self: var Field; drunk: Drunk; loc: Location) =
+proc addDrunk(self: Field; drunk: Drunk; loc: Location) =
   if self.drunks.hasKey(drunk):
     raise newException(ValueError, "Duplicate drunk")
   self.drunks[drunk] = loc
@@ -80,18 +85,48 @@ proc getLoc(self: Field; drunk: Drunk): Location =
     raise newException(ValueError, "Drunk not in field")
   result = self.drunks[drunk]
 
-proc moveDrunk(self: var Field; drunk: Drunk) =
+proc moveDrunk(self: Field; drunk: Drunk) =
   if not self.drunks.hasKey(drunk):
     raise newException(ValueError, "Drunk not in field")
   let (xDist, yDist) = drunk.takeStep()
   let currentLocation = self.drunks[drunk]
   self.drunks[drunk] = currentLocation.move(xDist, yDist)
 
+
+type
+  OddField = ref object of Field
+    wormholes: Table[Location, Location]
+
+# ----------------------
+# OddField type routines
+# ----------------------
+
+proc newOddField(numHoles = 1000, xRange = 100, yRange = 100): OddField =
+  new(result)
+  result.drunks = initTable[Drunk, Location]()
+  result.wormholes = initTable[Location, Location]()
+  for w in 1 .. numHoles:
+    let
+      x = random(-xRange..xRange+1)
+      y = random(-yRange..yRange+1)
+      newX = random(-xRange..xRange+1)
+      newY = random(-yRange..yRange+1)
+      loc = initLocation(x.float, y.float)
+      newLoc = initLocation(newX.float, newY.float)
+    result.wormholes[loc] = newLoc
+
+proc moveDrunk(self: OddField; drunk: Drunk) =
+  Field(self).moveDrunk(drunk)
+  let loc = self.drunks[drunk]
+  if self.wormholes.hasKey(loc):
+    self.drunks[drunk] = self.wormholes[loc]
+
+
 # -------------------
 # Simulation routines
 # -------------------
 
-proc walk(f: var Field; d: Drunk; numSteps: int): float =
+proc walk(f: Field; d: Drunk; numSteps: int): float =
   ## Moves d numSteps times, and returns the distance between
   ## the final location and the location at the start of the walk.
   let start = f.getLoc(d)
@@ -106,7 +141,7 @@ proc simWalks(numSteps, numTrials: int; dEnum: DrunkKind): seq[float] =
   let origin = initLocation(0.0, 0.0)
   result = @[]
   for t in 1 .. numTrials:
-    var f = initField()
+    let f = newField()
     f.addDrunk(homer, origin)
     result.add(round(walk(f, homer, numSteps), 1))
 
@@ -152,10 +187,10 @@ proc simAllToFile(drunkKinds: set[DrunkKind], walkLengths: openarray[int], numTr
 
 proc getFinalLocs(numSteps, numTrials: int; dEnum: DrunkKind): seq[Location] =
   result = @[]
-  let d = initDrunk(dEnum, "")
+  let d = initDrunk(dEnum, "Homer")
   let origin = initLocation(0.0, 0.0)
   for t in 1 .. numTrials:
-    var f = initField()
+    let f = newField()
     f.addDrunk(d, origin)
     for s in 1 .. numSteps:
       f.moveDrunk(d)
@@ -176,5 +211,34 @@ proc plotLocs(drunkKinds: set[DrunkKind], numSteps, numTrials: int) =
     fs.write("\n\n")
   fs.close()
 
+# plotLocs({UsualDk, ColdDk}, 10000, 1000)
 
-plotLocs({UsualDk, ColdDk}, 10000, 1000)
+template traceWalkImpl(newf: typed, writev: untyped): untyped {.dirty.} =
+  block:
+    let
+      d = initDrunk(UsualDk, "Homer")
+      f = newf
+    f.addDrunk(d, initLocation(0.0, 0.0))
+    var locs = newSeq[Location]()
+    for s in 1 .. numSteps:
+      f.moveDrunk(d)
+      locs.add(f.getLoc(d))
+    var xVals, yVals = newSeq[float]()
+    for loc in locs:
+      xVals.add(loc.getX())
+      yVals.add(loc.getY())
+    writev
+
+proc traceWalk(numSteps: int) =
+  template writeVals =
+    for i in 0 .. <numSteps:
+      fs.writeLine(xVals[i], " ", yVals[i])
+    fs.write("\n\n")
+
+  let fs = open("plotting-tracewalk.dat", fmWrite)
+  traceWalkImpl(newField(), writeVals)
+  traceWalkImpl(newOddField(), writeVals)
+  fs.close()
+
+# TraceWalk using Field and oddField
+traceWalk(500)
