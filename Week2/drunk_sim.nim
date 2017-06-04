@@ -213,12 +213,12 @@ proc plotLocs(drunkKinds: set[DrunkKind], numSteps, numTrials: int) =
 
 # plotLocs({UsualDk, ColdDk}, 10000, 1000)
 
-template traceWalkImpl(newf: typed, writev: untyped): untyped {.dirty.} =
+template traceWalkImpl(newf: typed; writev: untyped): untyped {.dirty.} =
   block:
-    let
-      d = initDrunk(UsualDk, "Homer")
-      f = newf
-    f.addDrunk(d, initLocation(0.0, 0.0))
+    let f = newf
+    let d = initDrunk(UsualDk, "Homer")
+    let origin = initLocation(0.0, 0.0)
+    f.addDrunk(d, origin)
     var locs = newSeq[Location]()
     for s in 1 .. numSteps:
       f.moveDrunk(d)
