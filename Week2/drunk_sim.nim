@@ -140,6 +140,7 @@ proc simDrunk(walkLengths: openarray[int]; numTrials: int; dEnum: DrunkKind): se
 proc simAllToFile(drunkKinds: set[DrunkKind], walkLengths: openarray[int], numTrials: int) =
   let fs = open("plotting-means.dat", fmWrite)
   for dEnum in drunkKinds:
+    echo("Starting simulation of ", dEnum)
     let means = simDrunk(walkLengths, numTrials, dEnum)
     for i in 0 .. <walkLengths.len:
       fs.writeLine(walkLengths[i], " ", means[i])
