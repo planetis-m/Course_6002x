@@ -222,35 +222,43 @@ proc plotLocs(drunkKinds: set[DrunkKind], numSteps, numTrials: int) =
 
 # plotLocs({UsualDk, ColdDk}, 10000, 1000)
 
+#[
+import interfaced
+
+createInterface(AnyField):
+   proc addDrunk(this: AnyField; drunk: Drunk; loc: Location)
+   proc getLoc(this: AnyField; drunk: Drunk): Location
+   proc moveDrunk(this: AnyField; drunk: Drunk)
+]#
 
 type
    AnyField = concept x
       x.moveDrunk(Drunk)
 
-proc traceWalk[T: AnyField](fields: openArray[T]; numSteps: int) =
+proc traceWalk[T: AnyField](f: T; numSteps: int) =
    let fs = open("plotting-tracewalk.dat", fmWrite)
 
-   for f in fields:
-      let d = initDrunk(UsualDk, "Homer")
-      let origin = initLocation(0.0, 0.0)
-      f.addDrunk(d, origin)
-      var locs = newSeq[Location]()
+   let d = initDrunk(UsualDk, "Homer")
+   let origin = initLocation(0.0, 0.0)
+   f.addDrunk(d, origin)
+   var locs = newSeq[Location]()
 
-      for s in 1 .. numSteps:
-         f.moveDrunk(d)
-         locs.add(f.getLoc(d))
+   for s in 1 .. numSteps:
+      f.moveDrunk(d)
+      locs.add(f.getLoc(d))
 
-      var xVals, yVals = newSeq[float]()
+   var xVals, yVals = newSeq[float]()
 
-      for loc in locs:
-         xVals.add(loc.getX())
-         yVals.add(loc.getY())
+   for loc in locs:
+      xVals.add(loc.getX())
+      yVals.add(loc.getY())
 
-      for i in 0 .. <numSteps:
-         fs.writeLine(xVals[i], " ", yVals[i])
-      fs.write("\n\n")
+   for i in 0 .. <numSteps:
+      fs.writeLine(xVals[i], " ", yVals[i])
+   fs.write("\n\n")
 
    fs.close()
 
 # TraceWalk using Field and oddField
-traceWalk([newField(), newOddField()], 500)
+traceWalk(newField(), 500)
+traceWalk(newOddField(), 500)
