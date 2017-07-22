@@ -65,8 +65,15 @@ proc takeStep(self: Drunk): auto =
 
 
 type
+   FieldKind = enum
+      NormalFk, OddFk
    Field = ref object of RootObj
       drunks: Table[Drunk, Location]
+      case kind: FieldKind
+      of OddFk:
+         wormholes: Table[Location, Location]
+      else:
+         discard
 
 # -------------------
 # Field type routines
@@ -75,6 +82,22 @@ type
 proc newField(): Field =
    new(result)
    result.drunks = initTable[Drunk, Location]()
+   result.kind = NormalFk
+
+proc newOddField(numHoles = 1000, xRange = 100, yRange = 100): Field =
+   new(result)
+   result.drunks = initTable[Drunk, Location]()
+   result.kind = OddFk
+   result.wormholes = initTable[Location, Location]()
+   for w in 1 .. numHoles:
+      let
+         x = random(-xRange..xRange+1)
+         y = random(-yRange..yRange+1)
+         newX = random(-xRange..xRange+1)
+         newY = random(-yRange..yRange+1)
+         loc = initLocation(x.float, y.float)
+         newLoc = initLocation(newX.float, newY.float)
+      result.wormholes[loc] = newLoc
 
 proc addDrunk(self: Field; drunk: Drunk; loc: Location) =
    if self.drunks.hasKey(drunk):
@@ -92,36 +115,10 @@ proc moveDrunk(self: Field; drunk: Drunk) =
    let (xDist, yDist) = drunk.takeStep()
    let currentLocation = self.drunks[drunk]
    self.drunks[drunk] = currentLocation.move(xDist, yDist)
-
-
-type
-   OddField = ref object of Field
-      wormholes: Table[Location, Location]
-
-# ----------------------
-# OddField type routines
-# ----------------------
-
-proc newOddField(numHoles = 1000, xRange = 100, yRange = 100): OddField =
-   new(result)
-   result.drunks = initTable[Drunk, Location]()
-   result.wormholes = initTable[Location, Location]()
-   for w in 1 .. numHoles:
-      let
-         x = random(-xRange..xRange+1)
-         y = random(-yRange..yRange+1)
-         newX = random(-xRange..xRange+1)
-         newY = random(-yRange..yRange+1)
-         loc = initLocation(x.float, y.float)
-         newLoc = initLocation(newX.float, newY.float)
-      result.wormholes[loc] = newLoc
-
-proc moveDrunk(self: OddField; drunk: Drunk) =
-   Field(self).moveDrunk(drunk)
-   let loc = self.drunks[drunk]
-   if self.wormholes.hasKey(loc):
-      self.drunks[drunk] = self.wormholes[loc]
-
+   if self.kind == OddFk:
+      let loc = self.drunks[drunk]
+      if self.wormholes.hasKey(loc):
+         self.drunks[drunk] = self.wormholes[loc]
 
 # -------------------
 # Simulation routines
@@ -222,43 +219,30 @@ proc plotLocs(drunkKinds: set[DrunkKind], numSteps, numTrials: int) =
 
 # plotLocs({UsualDk, ColdDk}, 10000, 1000)
 
-#[
-import interfaced
-
-createInterface(AnyField):
-   proc addDrunk(this: AnyField; drunk: Drunk; loc: Location)
-   proc getLoc(this: AnyField; drunk: Drunk): Location
-   proc moveDrunk(this: AnyField; drunk: Drunk)
-]#
-
-type
-   AnyField = concept x
-      x.moveDrunk(Drunk)
-
-proc traceWalk[T: AnyField](f: T; numSteps: int) =
+proc traceWalk(fields: openArray[Field]; numSteps: int) =
    let fs = open("plotting-tracewalk.dat", fmWrite)
 
-   let d = initDrunk(UsualDk, "Homer")
-   let origin = initLocation(0.0, 0.0)
-   f.addDrunk(d, origin)
-   var locs = newSeq[Location]()
+   for f in fields:
+      let d = initDrunk(UsualDk, "Homer")
+      let origin = initLocation(0.0, 0.0)
+      f.addDrunk(d, origin)
+      var locs = newSeq[Location]()
 
-   for s in 1 .. numSteps:
-      f.moveDrunk(d)
-      locs.add(f.getLoc(d))
+      for s in 1 .. numSteps:
+         f.moveDrunk(d)
+         locs.add(f.getLoc(d))
 
-   var xVals, yVals = newSeq[float]()
+      var xVals, yVals = newSeq[float]()
 
-   for loc in locs:
-      xVals.add(loc.getX())
-      yVals.add(loc.getY())
+      for loc in locs:
+         xVals.add(loc.getX())
+         yVals.add(loc.getY())
 
-   for i in 0 .. <numSteps:
-      fs.writeLine(xVals[i], " ", yVals[i])
-   fs.write("\n\n")
+      for i in 0 .. <numSteps:
+         fs.writeLine(xVals[i], " ", yVals[i])
+      fs.write("\n\n")
 
    fs.close()
 
 # TraceWalk using Field and oddField
-traceWalk(newField(), 500)
-traceWalk(newOddField(), 500)
+traceWalk([newField(), newOddField()], 500)
