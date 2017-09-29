@@ -65,8 +65,15 @@ proc takeStep(self: Drunk): auto =
 
 
 type
+   FieldKind = enum
+      NormalFk, OddFk
    Field = ref object of RootObj
       drunks: Table[Drunk, Location]
+      case kind: FieldKind
+      of OddFk:
+         wormholes: Table[Location, Location]
+      else:
+         discard
 
 # -------------------
 # Field type routines
@@ -75,6 +82,22 @@ type
 proc newField(): Field =
    new(result)
    result.drunks = initTable[Drunk, Location]()
+   result.kind = NormalFk
+
+proc newOddField(numHoles = 1000, xRange = 100, yRange = 100): Field =
+   new(result)
+   result.drunks = initTable[Drunk, Location]()
+   result.kind = OddFk
+   result.wormholes = initTable[Location, Location]()
+   for w in 1 .. numHoles:
+      let
+         x = random(-xRange..xRange+1)
+         y = random(-yRange..yRange+1)
+         newX = random(-xRange..xRange+1)
+         newY = random(-yRange..yRange+1)
+         loc = initLocation(x.float, y.float)
+         newLoc = initLocation(newX.float, newY.float)
+      result.wormholes[loc] = newLoc
 
 proc addDrunk(self: Field; drunk: Drunk; loc: Location) =
    if self.drunks.hasKey(drunk):
@@ -92,36 +115,10 @@ proc moveDrunk(self: Field; drunk: Drunk) =
    let (xDist, yDist) = drunk.takeStep()
    let currentLocation = self.drunks[drunk]
    self.drunks[drunk] = currentLocation.move(xDist, yDist)
-
-
-type
-   OddField = ref object of Field
-      wormholes: Table[Location, Location]
-
-# ----------------------
-# OddField type routines
-# ----------------------
-
-proc newOddField(numHoles = 1000, xRange = 100, yRange = 100): OddField =
-   new(result)
-   result.drunks = initTable[Drunk, Location]()
-   result.wormholes = initTable[Location, Location]()
-   for w in 1 .. numHoles:
-      let
-         x = random(-xRange..xRange+1)
-         y = random(-yRange..yRange+1)
-         newX = random(-xRange..xRange+1)
-         newY = random(-yRange..yRange+1)
-         loc = initLocation(x.float, y.float)
-         newLoc = initLocation(newX.float, newY.float)
-      result.wormholes[loc] = newLoc
-
-proc moveDrunk(self: OddField; drunk: Drunk) =
-   Field(self).moveDrunk(drunk)
-   let loc = self.drunks[drunk]
-   if self.wormholes.hasKey(loc):
-      self.drunks[drunk] = self.wormholes[loc]
-
+   if self.kind == OddFk:
+      let loc = self.drunks[drunk]
+      if self.wormholes.hasKey(loc):
+         self.drunks[drunk] = self.wormholes[loc]
 
 # -------------------
 # Simulation routines
@@ -223,31 +220,7 @@ proc plotLocs(drunkKinds: set[DrunkKind], numSteps, numTrials: int) =
 
 # plotLocs({UsualDk, ColdDk}, 10000, 1000)
 
-# --------------
-# Interface impl
-# --------------
-
-type
-   AnyField = tuple
-      addDrunk: proc(drunk: Drunk; loc: Location)
-      getLoc: proc(drunk: Drunk): Location
-      moveDrunk: proc(drunk: Drunk)
-
-proc toAnyField(f: Field): AnyField =
-   return (
-      addDrunk: proc(drunk: Drunk; loc: Location) = f.addDrunk(drunk, loc),
-      getLoc: proc(drunk: Drunk): Location = f.getLoc(drunk),
-      moveDrunk: proc(drunk: Drunk) = f.moveDrunk(drunk)
-   )
-
-proc toAnyField(f: OddField): AnyField =
-   return (
-      addDrunk: proc(drunk: Drunk; loc: Location) = f.addDrunk(drunk, loc),
-      getLoc: proc(drunk: Drunk): Location = f.getLoc(drunk),
-      moveDrunk: proc(drunk: Drunk) = f.moveDrunk(drunk)
-   )
-
-proc traceWalk(fields: openArray[AnyField]; numSteps: int) =
+proc traceWalk(fields: openArray[Field]; numSteps: int) =
    let fs = open("plotting-tracewalk.dat", fmWrite)
 
    for f in fields:
@@ -270,4 +243,4 @@ proc traceWalk(fields: openArray[AnyField]; numSteps: int) =
    fs.close()
 
 # TraceWalk using Field and oddField
-traceWalk([newField().toAnyField, newOddField().toAnyField], 500)
+traceWalk([newField(), newOddField()], 500)
