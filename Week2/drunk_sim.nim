@@ -161,11 +161,6 @@ proc simAll(drunkKinds: set[DrunkKind], walkLengths: openarray[int], numTrials: 
 # simAll({UsualDk, ColdDk},
 #        [1, 10, 100, 1000, 10000], 100)
 
-template writeData(f: File; a, b: typed) =
-   for i in 0 .. high(a):
-      f.writeLine(a[i], " ", b[i])
-   f.write("\n\n")
-
 proc simDrunk(walkLengths: openarray[int]; numTrials: int; dEnum: DrunkKind): seq[float] =
    ## Same as drunkTest, returns the mean of the trials
    result = @[]
@@ -182,7 +177,9 @@ proc simAllToFile(drunkKinds: set[DrunkKind], walkLengths: openarray[int], numTr
       echo("Starting simulation of ", dEnum)
       let means = simDrunk(walkLengths, numTrials, dEnum)
 
-      fs.writeData(walkLengths, means)
+      for i in 0 .. <walkLengths.len:
+         fs.writeLine(walkLengths[i], " ", means[i])
+      fs.write("\n\n")
    fs.close()
 
 # simAllToFile({UsualDk, ColdDk},
@@ -215,7 +212,9 @@ proc plotLocs(drunkKinds: set[DrunkKind], numSteps, numTrials: int) =
       # let meanX = sum(abs(xVals))/len(xVals).float
       # let meanY = sum(abs(yVals))/len(yVals).float
 
-      fs.writeData(xVals, yVals)
+      for i in 0 .. <numTrials:
+         fs.writeLine(xVals[i], " ", yVals[i])
+      fs.write("\n\n")
    fs.close()
 
 # plotLocs({UsualDk, ColdDk}, 10000, 1000)
@@ -239,7 +238,10 @@ proc traceWalk(fields: openArray[Field]; numSteps: int) =
          xVals.add(loc.getX())
          yVals.add(loc.getY())
 
-      fs.writeData(xVals, yVals)
+      for i in 0 .. <numSteps:
+         fs.writeLine(xVals[i], " ", yVals[i])
+      fs.write("\n\n")
+
    fs.close()
 
 # TraceWalk using Field and oddField
