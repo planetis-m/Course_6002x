@@ -67,7 +67,7 @@ proc takeStep(self: Drunk): auto =
 type
    FieldKind = enum
       NormalFk, OddFk
-   Field = ref object of RootObj
+   Field = ref object
       drunks: Table[Drunk, Location]
       case kind: FieldKind
       of OddFk:
@@ -177,11 +177,9 @@ proc simDrunk(walkLengths: openarray[int]; numTrials: int; dEnum: DrunkKind): se
 
 proc simAllToFile(drunkKinds: set[DrunkKind], walkLengths: openarray[int], numTrials: int) =
    let fs = open("plotting-means.dat", fmWrite)
-
    for dEnum in drunkKinds:
       echo("Starting simulation of ", dEnum)
       let means = simDrunk(walkLengths, numTrials, dEnum)
-
       fs.writeData(walkLengths, means)
    fs.close()
 
@@ -192,29 +190,23 @@ proc getFinalLocs(numSteps, numTrials: int; dEnum: DrunkKind): seq[Location] =
    result = @[]
    let d = initDrunk(dEnum, "Homer")
    let origin = initLocation(0.0, 0.0)
-
    for t in 1 .. numTrials:
       let f = newField()
       f.addDrunk(d, origin)
-
       for s in 1 .. numSteps:
          f.moveDrunk(d)
       result.add(f.getLoc(d))
 
 proc plotLocs(drunkKinds: set[DrunkKind], numSteps, numTrials: int) =
    let fs = open("plotting-locations.dat", fmWrite)
-
    for dEnum in drunkKinds:
       let locs = getFinalLocs(numSteps, numTrials, dEnum)
       var xVals, yVals = newSeq[float]()
-
       for loc in locs:
          xVals.add(loc.getX)
          yVals.add(loc.getY)
-
       # let meanX = sum(abs(xVals))/len(xVals).float
       # let meanY = sum(abs(yVals))/len(yVals).float
-
       fs.writeData(xVals, yVals)
    fs.close()
 
@@ -222,23 +214,18 @@ proc plotLocs(drunkKinds: set[DrunkKind], numSteps, numTrials: int) =
 
 proc traceWalk(fields: openArray[Field]; numSteps: int) =
    let fs = open("plotting-tracewalk.dat", fmWrite)
-
    for f in fields:
       let d = initDrunk(UsualDk, "Homer")
       let origin = initLocation(0.0, 0.0)
       f.addDrunk(d, origin)
       var locs = newSeq[Location]()
-
       for s in 1 .. numSteps:
          f.moveDrunk(d)
          locs.add(f.getLoc(d))
-
       var xVals, yVals = newSeq[float]()
-
       for loc in locs:
          xVals.add(loc.getX())
          yVals.add(loc.getY())
-
       fs.writeData(xVals, yVals)
    fs.close()
 
