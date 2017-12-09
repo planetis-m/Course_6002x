@@ -1,13 +1,12 @@
 import tables, hashes, deques
 
+# ------------------
+# Node type routines
+# ------------------
 
 type
    Node = object
       name: string
-
-# ------------------
-# Node type routines
-# ------------------
 
 proc initNode(name: string): Node =
    result = Node(name: name)
@@ -22,14 +21,13 @@ proc hash(n: Node): Hash =
 proc `$`(n: Node): string =
    result = n.name
 
+# ------------------
+# Edge type routines
+# ------------------
 
 type
    Edge = object
       src, dest: Node
-
-# ------------------
-# Edge type routines
-# ------------------
 
 proc initEdge(src, dest: Node): Edge =
    result = Edge(src: src, dest: dest)
@@ -43,6 +41,9 @@ proc getDestination(e: Edge): Node =
 proc `$`(e: Edge): string =
    result = $e.src & "->" & $e.dest
 
+# ---------------------
+# Digraph type routines
+# ---------------------
 
 type
    Digraph = ref object of RootObj
@@ -51,10 +52,6 @@ type
 
 proc initGraph(T: typedesc[Graph | Digraph]): T =
    result = T(edges: initTable[Node, seq[Node]]())
-
-# ---------------------
-# Digraph type routines
-# ---------------------
 
 proc addNode(d: Digraph; node: Node) =
    if d.edges.hasKey(node):
@@ -74,15 +71,16 @@ proc hasNode(d: Digraph; node: Node): bool =
    result = d.edges.hasKey(node)
 
 proc getNode(d: Digraph; name: string): Node =
-   let n = initNode(name)
-   assert d.edges.hasKey(n)
-   result = n
+   for n in keys(d.edges):
+      if n.getName() == name:
+         return n
+   raise newException(KeyError, "No node found with name")
 
 proc `$`(d: Digraph): string =
    result = ""
    for src, dests in d.edges:
       for dest in dests:
-         result &= $src & "->" & $dest & "\n"
+         result.add $src & "->" & $dest & "\n"
 
 # -------------------
 # Graph type routines
@@ -93,13 +91,12 @@ proc addEdge(g: Graph; edge: Edge) =
    let rev = initEdge(edge.dest, edge.src)
    Digraph(g).addEdge(rev)
 
-
 proc `$`[T](path: seq[T]): string =
    result = ""
-   for i in 0 .. <path.len:
-      result &= $path[i]
+   for i in 0 ..< path.len:
+      result.add $path[i]
       if i != len(path) - 1:
-         result &= "->"
+         result.add "->"
 
 proc buildCityGraph(T: typedesc[Graph | Digraph]): T =
    result = initGraph(T)
@@ -117,7 +114,6 @@ proc buildCityGraph(T: typedesc[Graph | Digraph]): T =
    result.addEdge(initEdge(initNode("Denver"), initNode("Phoenix")))
    result.addEdge(initEdge(initNode("Denver"), initNode("New York")))
    result.addEdge(initEdge(initNode("Los Angeles"), initNode("Boston")))
-
 
 proc dfs(graph: Digraph; start, finish: Node; path, shortest = newSeq[Node]()): seq[Node] =
    var path = path & @[start]

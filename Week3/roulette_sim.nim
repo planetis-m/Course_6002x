@@ -114,8 +114,7 @@ proc simAll(rouletteKinds: set[RouletteKind], gameLengths: openarray[int],
          #       $(100*sum(pocketReturns)/len(pocketReturns).float), "%")
          let (mean, std) = getMeanAndStd(pocketReturns)
          echo("Exp. return for ", game.kind, " = ", ff(100*mean),
-            "%, +/- ", ff(100*1.96*std),
-            "% with 95% confidence")
+              "%, +/- ", ff(100*1.96*std), "% with 95% confidence")
 
 simAll({Fair, European, American},
        [100, 1000, 10000, 100000], 20)
