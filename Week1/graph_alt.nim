@@ -44,7 +44,7 @@ proc `$`(e: Edge): string =
 
 type
    Digraph = ref object of RootObj
-      edges: Table[Node, seq[Node]]
+      edges: Table[Node, Node]
 
    Graph = ref object of Digraph
 
@@ -54,20 +54,15 @@ type
 
 proc initGraph(T: typedesc[Graph | Digraph]): T =
    new(result)
-   result.edges = initTable[Node, seq[Node]]()
-
-proc addNode(d: Digraph; node: Node) =
-   if d.edges.hasKey(node):
-      raise newException(ValueError, "Duplicate node")
-   d.edges[node] = @[]
+   result.edges = initTable[Node, Node]()
 
 proc addEdge(d: Digraph; edge: Edge) =
-   if not (d.edges.hasKey(edge.src) and d.edges.hasKey(edge.dest)):
-      raise newException(ValueError, "Node not in graph")
-   d.edges[edge.src].add(edge.dest)
+   d.edges.add(edge.src, edge.dest)
 
-proc childrenOf(d: Digraph; node: Node): seq[Node] =
-   result = d.edges[node]
+iterator childrenOf(d: Digraph; node: Node): Node =
+   for src, dest in d.edges:
+      if node == src:
+         yield dest
 
 proc hasNode(d: Digraph; node: Node): bool =
    result = d.edges.hasKey(node)
@@ -80,9 +75,8 @@ proc getNode(d: Digraph; name: string): Node =
 
 proc `$`(d: Digraph): string =
    result = ""
-   for src, dests in d.edges:
-      for dest in dests:
-         result.add $src & "->" & $dest & "\n"
+   for src, dest in d.edges:
+      result.add $src & "->" & $dest & "\n"
 
 # -------------------
 # Graph type routines
@@ -102,10 +96,6 @@ proc `$`[T](path: seq[T]): string =
 
 proc buildCityGraph(T: typedesc[Graph | Digraph]): T =
    result = initGraph(T)
-   for name in ["Boston", "Providence", "New York", "Chicago",
-                "Denver", "Phoenix", "Los Angeles"]:
-      result.addNode(initNode(name))
-
    result.addEdge(initEdge(initNode("Boston"), initNode("Providence")))
    result.addEdge(initEdge(initNode("Boston"), initNode("New York")))
    result.addEdge(initEdge(initNode("Providence"), initNode("Boston")))
