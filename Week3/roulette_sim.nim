@@ -1,6 +1,5 @@
 import random, math, strutils
 
-
 type
    RouletteKind = enum
       Fair = "Fair Roulette"
@@ -9,23 +8,18 @@ type
 
    Roulette = object
       kind: RouletteKind
-      pockets: seq[int]
+      pockets: Slice[int]
       ball: int
       blackOdds, redOdds, pocketOdds: float
 
 proc initRoulette(rEnum: RouletteKind): Roulette =
-   let WheelRange = case rEnum
+   result.pockets = case rEnum
       of Fair:
          1..36
       of European:
          1..37
       of American:
          1..38
-
-   result.pockets = @[]
-   for i in WheelRange:
-      result.pockets.add(i)
-
    result.kind = rEnum
    result.ball = 0
    result.blackOdds = 1.0
@@ -33,7 +27,7 @@ proc initRoulette(rEnum: RouletteKind): Roulette =
    result.pocketOdds = len(result.pockets).float - 1.0
 
 proc spin(self: var Roulette) =
-   self.ball = random(self.pockets)
+   self.ball = rand(self.pockets)
 
 proc isBlack(self: Roulette): bool =
    if self.ball > 36:
