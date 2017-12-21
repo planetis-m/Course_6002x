@@ -1,20 +1,16 @@
 import math, random, strutils
 
-type
-   Function = proc(x: float): float
-   Rule = proc(f: Function; x, h: float): float
+type Function = proc(x: float): float
 
-proc trapezium(f: Function; x, h: float): float =
-   result = (f(x) + f(x+h)) / 2.0
-
-proc simpson(f: Function, x, h: float): float =
-   result = (f(x) + 4.0*f(x+h/2.0) + f(x+h)) / 6.0
-
-proc integrate(f: Function; a, b: float; steps: int; meth: Rule): float =
-   let h = (b - a) / float(steps)
-   for i in 0 ..< steps:
-      result += meth(f, a + float(i)*h, h)
-   result = h * result
+proc simpson(f: Function; a, b: float; n: int): float =
+   assert(n mod 2 == 0, "number of steps must be even")
+   let h = (b - a) / float(n)
+   var s = f(a) + f(b)
+   for i in countup(1, n-1, 2):
+      s += 4.0 * f(a + float(i) * h)
+   for i in countup(2, n-2, 2):
+      s += 2.0 * f(a + float(i) * h)
+   result = s * h / 3.0
 
 proc gaussian(x, mu, sigma: float): float =
    let factor1 = 1.0/(sigma*sqrt(2.0*Pi))
@@ -29,9 +25,9 @@ proc checkEmpirical(numTrials: int) =
       let sigma = randz(1, 10)
       echo("For mu = ", mu, " and sigma = ", sigma)
       for numStd in [1.0, 1.96, 3.0]:
-         let area = integrate(proc (x: float): float = gaussian(x, mu, sigma),
-                              mu-numStd*sigma,
-                              mu+numStd*sigma, 30, simpson)
-         echo("  Fraction within ", numStd, " std = ", area)
+         let area = simpson(proc (x: float): float = gaussian(x, mu, sigma),
+                            mu-numStd*sigma,
+                            mu+numStd*sigma, 20)
+         echo("  Fraction within ", numStd, " std = ", ff(area))
 
 checkEmpirical(3)
