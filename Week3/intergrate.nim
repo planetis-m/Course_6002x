@@ -18,12 +18,12 @@ proc integrate(f: Function; a, b: float; steps: int; meth: Rule): float =
 
 proc gaussian(x, mu, sigma: float): float =
    let factor1 = 1.0/(sigma*sqrt(2.0*Pi))
-   let factor2 = exp(-pow(x-mu, 2.0)/(2.0*sigma*sigma))
+   let factor2 = exp(-pow(x-mu, 2.0)/(2.0*pow(sigma, 2.0)))
    result = factor1 * factor2
 
 proc checkEmpirical(numTrials: int) =
-   template ff(f: float): string = formatFloat(f, ffDecimal, 4)
-   template randz(a, b: int): float = float(rand(b - a) + a)
+   proc ff(f: float): string = formatFloat(f, ffDecimal, 4)
+   proc randz(a, b: int): float = float(rand(b - a) + a)
    for t in 1 .. numTrials:
       let mu = randz(-10, 10)
       let sigma = randz(1, 10)
@@ -31,7 +31,7 @@ proc checkEmpirical(numTrials: int) =
       for numStd in [1.0, 1.96, 3.0]:
          let area = integrate(proc (x: float): float = gaussian(x, mu, sigma),
                               mu-numStd*sigma,
-                              mu+numStd*sigma, 50, simpson)
-         echo("  Fraction within ", numStd, " std = ", ff(area))
+                              mu+numStd*sigma, 30, simpson)
+         echo("  Fraction within ", numStd, " std = ", area)
 
 checkEmpirical(3)
