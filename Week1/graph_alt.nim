@@ -60,9 +60,8 @@ proc addEdge(d: Digraph; edge: Edge) =
    d.edges.add(edge.src, edge.dest)
 
 iterator childrenOf(d: Digraph; node: Node): Node =
-   for src, dest in d.edges:
-      if node == src:
-         yield dest
+   for dest in d.edges.allValues(node):
+      yield dest
 
 proc hasNode(d: Digraph; node: Node): bool =
    result = d.edges.hasKey(node)
