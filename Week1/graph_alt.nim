@@ -16,7 +16,6 @@ proc getName(n: Node): string =
 
 proc hash(n: Node): Hash =
    result = hash(n.name)
-   result = !$result
 
 proc `$`(n: Node): string =
    result = n.name
@@ -75,7 +74,7 @@ proc getNode(d: Digraph; name: string): Node =
 proc `$`(d: Digraph): string =
    result = ""
    for src, dest in d.edges:
-      result.add $src & "->" & $dest & "\n"
+      result.add($src & "->" & $dest & "\n")
 
 # -------------------
 # Graph type routines
@@ -89,9 +88,9 @@ proc addEdge(g: Graph; edge: Edge) =
 proc `$`[T](path: seq[T]): string =
    result = ""
    for i in 0 ..< path.len:
-      result.add $path[i]
+      result.add($path[i])
       if i != len(path) - 1:
-         result.add "->"
+         result.add("->")
 
 proc buildCityGraph(T: typedesc[Graph | Digraph]): T =
    result = initGraph(T)
@@ -107,7 +106,8 @@ proc buildCityGraph(T: typedesc[Graph | Digraph]): T =
    result.addEdge(initEdge(initNode("Los Angeles"), initNode("Boston")))
 
 proc dfs(graph: Digraph; start, finish: Node; path, shortest = newSeq[Node]()): seq[Node] =
-   var path = path & @[start]
+   var path = path
+   path.add(start)
    var shortest = shortest
    echo("Current DFS path: ", path)
    if start == finish:
@@ -137,7 +137,8 @@ proc bfs(graph: Digraph, start, finish: Node): seq[Node] =
          return tmpPath
       for nextNode in graph.childrenOf(lastNode):
          if nextNode notin tmpPath:
-            let newPath = tmpPath & @[nextNode]
+            var newPath = tmpPath
+            newPath.add(nextNode)
             pathQueue.addLast(newPath)
 
 proc shortestPath(graph: Digraph; start, finish: Node): seq[Node] =
