@@ -24,7 +24,7 @@ proc initRoulette(rEnum: RouletteKind): Roulette =
    result.ball = 0
    result.blackOdds = 1.0
    result.redOdds = 1.0
-   result.pocketOdds = len(result.pockets).float - 1.0
+   result.pocketOdds = float(len(result.pockets) - 1)
 
 proc spin(self: var Roulette) =
    self.ball = rand(self.pockets)
