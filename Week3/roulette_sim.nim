@@ -91,7 +91,7 @@ proc getMeanAndStd(xa: seq[float]): auto =
    var tot = 0.0
    for x in xa:
       tot += pow(x - mean, 2.0)
-   let std = pow(tot/len(xa).float, 0.5)
+   let std = sqrt(tot/len(xa).float)
    (mean, std)
 
 template ff(f: float, prec: int = 3): string = formatFloat(f, ffDecimal, prec)
