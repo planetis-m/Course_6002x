@@ -2,30 +2,17 @@ import math, random, strutils
 
 type Func = proc(x: float): float
 
-proc integrate(f: Func; a, b, eps = 1e-8; maxDepth = 20): float =
-   proc adsimp(f: Func; a, b, eps, s, fa, fb, fc: float; depth: int): float =
-      let
-         c = (a + b)/2
-         h = b - a
-         d = (a + c)/2
-         e = (c + b)/2
-         fd = f(d)
-         fe = f(e)
-         sLeft = (h/12)*(fa + 4*fd + fc)
-         sRight = (h/12)*(fc + 4*fe + fb)
-         s2 = sLeft + sRight
-      if depth <= 0 or abs(s2 - s) <= 15*eps:   # magic 15 comes from error analysis
-         return s2 + (s2 - s)/15
-      result = adsimp(f, a, c, eps/2, sLeft,  fa, fc, fd, depth-1) +
-               adsimp(f, c, b, eps/2, sRight, fc, fb, fe, depth-1)
-   let
-      c = (a + b)/2
-      h = b - a
-      fa = f(a)
-      fb = f(b)
-      fc = f(c)
-      s = (h/6)*(fa + 4*fc + fb)
-   result = adsimp(f, a, b, eps, s, fa, fb, fc, maxDepth)
+proc simpson*(f: Func; a, b: float; n: int): float =
+   assert n mod 2 == 0, "number of steps must be even"
+   let h = (b - a) / float(n)
+   let h1 = h / 3.0
+   var sum = f(a) + f(b)
+   var j = 3 * n - 1
+   while j > 0:
+      let l1 = if (j mod 3) > 0: 3.0 else: 2.0
+      sum += l1 * f(a + h1 * float(j))
+      dec(j)
+   h * sum / 8.0
 
 proc gaussian(x, mu, sigma: float): float =
    let factor1 = 1.0/(sigma*sqrt(2.0*Pi))
@@ -39,9 +26,9 @@ proc checkEmpirical(numTrials: int) =
       let sigma = float(rand(1 .. 10))
       echo("For mu = ", mu, " and sigma = ", sigma)
       for numStd in [1.0, 1.96, 3.0]:
-         let area = integrate(proc (x: float): float = gaussian(x, mu, sigma),
-                              mu-numStd*sigma,
-                              mu+numStd*sigma, 0.001)
+         let area = simpson(proc (x: float): float = gaussian(x, mu, sigma),
+                            mu-numStd*sigma,
+                            mu+numStd*sigma, 20)
          echo("  Fraction within ", numStd, " std = ", ff(area))
 
 checkEmpirical(3)

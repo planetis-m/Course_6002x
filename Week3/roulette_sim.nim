@@ -111,4 +111,4 @@ proc simAll(rouletteKinds: set[RouletteKind], gameLengths: openarray[int],
               "%, +/- ", ff(100*1.96*std), "% with 95% confidence")
 
 simAll({Fair, European, American},
-       [100, 1000, 10000, 100000], 20)
+       [100, 1000, 10_000, 100_000], 20)

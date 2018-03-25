@@ -1,16 +1,17 @@
 import random, math, strutils
 import stddev
 
-template ff(f: float, prec: int = 3): string = formatFloat(f, ffDecimal, prec)
+template ff(f: float, prec: int = 3): string =
+   formatFloat(f, ffDecimal, prec)
 
 proc throwNeedles(numNeedles: int): float =
    var inCircle = 0
-   for needles in 1 .. numNeedles + 1:
+   for t in 1 .. numNeedles:
       let x = rand(1.0)
       let y = rand(1.0)
       if sqrt(x*x + y*y) <= 1.0:
          inc(inCircle)
-   4.0 * (inCircle / numNeedles)
+   4.0*(inCircle/numNeedles)
 
 proc getEst(numNeedles, numTrials: int): (float, float) =
    var estimates: seq[float] = @[]

@@ -4,7 +4,7 @@ import math
 iterator get_partitions_ordered*[T](s: openArray[T]): seq[seq[T]] =
    # http://stackoverflow.com/a/25460561/
    let n = len(s)-1
-   for partition_index in 0 .. <(2 ^ n):
+   for partition_index in 0 ..< 2 ^ n:
       # current partition, e.g., [['a', 'b'], ['c', 'd', 'e']]
       var partition = newSeq[seq[T]]()
       # used to accumulate the subsets, e.g., ['a', 'b']
