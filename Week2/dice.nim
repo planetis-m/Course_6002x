@@ -1,13 +1,14 @@
 import random, math, strutils
 
 # randomize()
+type Dice = range[1 .. 6]
 
 template ff(f: float, prec: int = 3): string =
    formatFloat(f, ffDecimal, prec)
 
-proc rollDie(): int =
+proc rollDie(): Dice =
    ## returns a random int between 1 and 6
-   rand(1 .. 6)
+   rand(1 .. 7)
 
 proc testRoll(n = 10) =
    var res = ""

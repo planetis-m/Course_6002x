@@ -1,10 +1,8 @@
-import math
 
-
-iterator get_partitions_ordered*[T](s: openArray[T]): seq[seq[T]] =
+iterator partitionsOrdered*[T](s: openArray[T]): seq[seq[T]] =
    # http://stackoverflow.com/a/25460561/
-   let n = len(s)-1
-   for partition_index in 0 ..< 2 ^ n:
+   let n = len(s) - 1
+   for partition_index in 0 ..< 1 shl n: # 2 ^ n
       # current partition, e.g., [['a', 'b'], ['c', 'd', 'e']]
       var partition = newSeq[seq[T]]()
       # used to accumulate the subsets, e.g., ['a', 'b']
@@ -17,7 +15,7 @@ iterator get_partitions_ordered*[T](s: openArray[T]): seq[seq[T]] =
             subset.setLen(0)
       yield partition
 
-iterator get_partitions*[T](s: openArray[T]): seq[seq[T]] =
+iterator partitions*[T](s: openArray[T]): seq[seq[T]] =
    # http://stackoverflow.com/a/41499670/
    var lists = newSeq[seq[T]]()
    var indexes = newSeq[int](len(s))
@@ -46,5 +44,5 @@ iterator get_partitions*[T](s: openArray[T]): seq[seq[T]] =
             inc(i)
 
 when isMainModule:
-   for elt in get_partitions(['a', 'b', 'c', 'd']):
+   for elt in partitions(['a', 'b', 'c', 'd']):
       echo elt
