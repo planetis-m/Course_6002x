@@ -1,4 +1,4 @@
-import tables, hashes, deques
+import macros, tables, hashes, deques
 
 type
    Node = object
@@ -85,25 +85,47 @@ proc addEdge(g: Graph; edge: Edge) =
    let rev = initEdge(edge.dest, edge.src)
    Digraph(g).addEdge(rev)
 
-proc `$`[T](path: seq[T]): string =
+proc `$`(path: seq[Node]): string =
    result = ""
    for i in 0 ..< path.len:
       result.add($path[i])
       if i != len(path) - 1:
          result.add("->")
 
+proc graphDslImpl(head, body: NimNode): NimNode =
+   template adder(graph, src, dest): untyped =
+      graph.addEdge(initEdge(initNode(src), initNode(dest)))
+
+   if body.kind == nnkInfix and $body[0] == "->":
+      result = newStmtList()
+      result.add getAst(adder(head, body[1], body[2]))
+   else:
+      result = copyNimNode(body)
+      for n in body:
+         if n.kind in nnkCallKinds and n[0].kind == nnkIdent and $n[0] == "edges":
+            assert n[1].kind == nnkStmtList
+            for x in n[1]: result.add graphDslImpl(head, x)
+         else:
+            result.add n
+
+macro graph(head, body: untyped): untyped =
+   result = graphDslImpl(head, body)
+   echo result.repr
+
 proc buildCityGraph(T: typedesc[Graph | Digraph]): T =
    result = initGraph(T)
-   result.addEdge(initEdge(initNode("Boston"), initNode("Providence")))
-   result.addEdge(initEdge(initNode("Boston"), initNode("New York")))
-   result.addEdge(initEdge(initNode("Providence"), initNode("Boston")))
-   result.addEdge(initEdge(initNode("Providence"), initNode("New York")))
-   result.addEdge(initEdge(initNode("New York"), initNode("Chicago")))
-   result.addEdge(initEdge(initNode("Chicago"), initNode("Phoenix")))
-   result.addEdge(initEdge(initNode("Chicago"), initNode("Denver")))
-   result.addEdge(initEdge(initNode("Denver"), initNode("Phoenix")))
-   result.addEdge(initEdge(initNode("Denver"), initNode("New York")))
-   result.addEdge(initEdge(initNode("Los Angeles"), initNode("Boston")))
+   graph(result):
+      edges:
+         "Boston" -> "Providence"
+         "Boston" -> "New York"
+         "Providence" -> "Boston"
+         "Providence" -> "New York"
+         "New York" -> "Chicago"
+         "Chicago" -> "Phoenix"
+         "Chicago" -> "Denver"
+         "Denver" -> "Phoenix"
+         "Denver" -> "New York"
+         "Los Angeles" -> "Boston"
 
 proc dfs(graph: Digraph; start, finish: Node; path, shortest = newSeq[Node]()): seq[Node] =
    var path = path
