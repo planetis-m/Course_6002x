@@ -102,30 +102,25 @@ proc graphDslImpl(head, body: NimNode): NimNode =
    else:
       result = copyNimNode(body)
       for n in body:
-         if n.kind in nnkCallKinds and n[0].kind == nnkIdent and $n[0] == "edges":
-            assert n[1].kind == nnkStmtList
-            for x in n[1]: result.add graphDslImpl(head, x)
-         else:
-            result.add n
+         result.add graphDslImpl(head, n)
 
-macro graph(head, body: untyped): untyped =
+macro edges(head, body: untyped): untyped =
    result = graphDslImpl(head, body)
    echo result.repr
 
 proc buildCityGraph(T: typedesc[Graph | Digraph]): T =
    result = initGraph(T)
-   graph(result):
-      edges:
-         "Boston" -> "Providence"
-         "Boston" -> "New York"
-         "Providence" -> "Boston"
-         "Providence" -> "New York"
-         "New York" -> "Chicago"
-         "Chicago" -> "Phoenix"
-         "Chicago" -> "Denver"
-         "Denver" -> "Phoenix"
-         "Denver" -> "New York"
-         "Los Angeles" -> "Boston"
+   edges(result):
+      "Boston" -> "Providence"
+      "Boston" -> "New York"
+      "Providence" -> "Boston"
+      "Providence" -> "New York"
+      "New York" -> "Chicago"
+      "Chicago" -> "Phoenix"
+      "Chicago" -> "Denver"
+      "Denver" -> "Phoenix"
+      "Denver" -> "New York"
+      "Los Angeles" -> "Boston"
 
 proc dfs(graph: Digraph; start, finish: Node; path, shortest = newSeq[Node]()): seq[Node] =
    var path = path
