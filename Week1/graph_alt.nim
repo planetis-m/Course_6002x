@@ -42,28 +42,25 @@ proc `$`(e: Edge): string =
    result = $e.src & "->" & $e.dest
 
 type
-   Digraph = ref object of RootObj
+   Digraph = object
       edges: Table[Node, Node]
-
-   Graph = ref object of Digraph
 
 # ---------------------
 # Digraph type routines
 # ---------------------
 
-proc initGraph(T: typedesc[Graph | Digraph]): T =
-   new(result)
+proc initGraph(): Digraph =
    result.edges = initTable[Node, Node]()
 
-proc addEdge(d: Digraph; edge: Edge) =
+proc addEdge(d: var Digraph; edge: Edge) =
    d.edges.add(edge.src, edge.dest)
 
 iterator childrenOf(d: Digraph; node: Node): Node =
    for dest in d.edges.allValues(node):
       yield dest
 
-proc hasNode(d: Digraph; node: Node): bool =
-   result = d.edges.hasKey(node)
+proc hasNode(d: var Digraph; node: Node): bool =
+   d.edges.hasKey(node)
 
 proc getNode(d: Digraph; name: string): Node =
    for n in keys(d.edges):
@@ -75,15 +72,6 @@ proc `$`(d: Digraph): string =
    result = ""
    for src, dest in d.edges:
       result.add($src & "->" & $dest & "\n")
-
-# -------------------
-# Graph type routines
-# -------------------
-
-proc addEdge(g: Graph; edge: Edge) =
-   Digraph(g).addEdge(edge)
-   let rev = initEdge(edge.dest, edge.src)
-   Digraph(g).addEdge(rev)
 
 proc `$`(path: seq[Node]): string =
    result = ""
@@ -97,8 +85,11 @@ proc graphDslImpl(head, body: NimNode): NimNode =
       graph.addEdge(initEdge(initNode(src), initNode(dest)))
 
    if body.kind == nnkInfix and $body[0] == "->":
+      result = getAst(adder(head, body[1], body[2]))
+   elif body.kind == nnkInfix and $body[0] == "--":
       result = newStmtList()
       result.add getAst(adder(head, body[1], body[2]))
+      result.add getAst(adder(head, body[2], body[1]))
    else:
       result = copyNimNode(body)
       for n in body:
@@ -108,28 +99,27 @@ macro edges(head, body: untyped): untyped =
    result = graphDslImpl(head, body)
    echo result.repr
 
-proc buildCityGraph(T: typedesc[Graph | Digraph]): T =
-   result = initGraph(T)
+proc buildCityGraph(): Digraph =
+   result = initGraph()
    edges(result):
-      "Boston" -> "Providence"
+      "Boston" -- "Providence"
       "Boston" -> "New York"
-      "Providence" -> "Boston"
       "Providence" -> "New York"
       "New York" -> "Chicago"
-      "Chicago" -> "Phoenix"
       "Chicago" -> "Denver"
       "Denver" -> "Phoenix"
       "Denver" -> "New York"
       "Los Angeles" -> "Boston"
 
 proc dfs(graph: Digraph; start, finish: Node; path, shortest = newSeq[Node]()): seq[Node] =
+   var shortest = shortest
    var path = path
    path.add(start)
-   var shortest = shortest
    echo("Current DFS path: ", path)
    if start == finish:
       return path
    for node in graph.childrenOf(start):
+      # echo path
       if node notin path:
          if len(shortest) == 0 or len(path) < len(shortest):
             let newPath = dfs(graph, node, finish, path, shortest)
@@ -137,7 +127,7 @@ proc dfs(graph: Digraph; start, finish: Node; path, shortest = newSeq[Node]()): 
                shortest = newPath
       else:
          echo("Already visited ", node)
-   result = shortest
+   shortest
 
 proc bfs(graph: Digraph, start, finish: Node): seq[Node] =
    ## Returns a shortest path from start to end in graph
@@ -159,10 +149,10 @@ proc bfs(graph: Digraph, start, finish: Node): seq[Node] =
             pathQueue.addLast(newPath)
 
 proc shortestPath(graph: Digraph; start, finish: Node): seq[Node] =
-   result = dfs(graph, start, finish)
+   dfs(graph, start, finish)
 
 proc testSP(source, destination: string) =
-   let g = buildCityGraph(Digraph)
+   let g = buildCityGraph()
    let sp = shortestPath(g, initNode(source), initNode(destination))
    if len(sp) != 0:
       echo("Shortest path from ", source, " to ",
@@ -170,5 +160,6 @@ proc testSP(source, destination: string) =
    else:
       echo("There is no path from ", source, " to ", destination)
 
+# testSP("Chicago", "Boston")
 testSP("Boston", "Phoenix")
-# Correct: Boston->New York->Chicago->Phoenix
+# Correct: Boston->New York->Chicago->Denver->Phoenix
