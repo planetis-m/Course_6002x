@@ -31,8 +31,8 @@ proc spin(self: var Roulette) =
 
 proc isBlack(self: Roulette): bool =
    if self.ball > 36:
-      return false
-   if (self.ball > 0 and self.ball <= 10) or
+      false
+   elif (self.ball > 0 and self.ball <= 10) or
       (self.ball > 18 and self.ball <= 28):
       self.ball mod 2 == 0
    else:

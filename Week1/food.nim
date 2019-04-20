@@ -39,7 +39,7 @@ proc initMenu(size = 0): Menu {.inline.} =
 proc toMenu(n: seq[string]; val, cal: seq[int]): Menu =
    let m = min([n.len, val.len, cal.len])
    result = initMenu(m)
-   for i in 0 .. <m:
+   for i in 0 ..< m:
       result[i] = newFood(n[i], val[i], cal[i])
 
 # -----------
@@ -80,18 +80,18 @@ proc maxVal(toConsider: Menu, avail: int): (int, Menu) =
    # Returns a tuple of the total value of a solution to the
    # 0/1 knapsack problem and the items of that solution
    if toConsider.len == 0 or avail == 0:
-      result = (0, nil)
+      result = (0, @[])
    elif toConsider[0].getCost() > avail:
       #Explore right branch only
-      result = maxVal(toConsider[1..^1], avail)
+      result = maxVal(toConsider[1 .. ^1], avail)
    else:
       let nextItem = toConsider[0]
       #Explore left branch
-      var (withVal, withToTake) = maxVal(toConsider[1..^1],
+      var (withVal, withToTake) = maxVal(toConsider[1 .. ^1],
                                   avail - nextItem.getCost())
       withVal += nextItem.getValue()
       #Explore right branch
-      let (withoutVal, withoutToTake) = maxVal(toConsider[1..^1], avail)
+      let (withoutVal, withoutToTake) = maxVal(toConsider[1 .. ^1], avail)
       #Choose better branch
       if withVal > withoutVal:
          result = (withVal, withToTake & nextItem)
@@ -111,8 +111,8 @@ proc testMaxVal(foods: Menu, maxUnits: int) =
 
 proc buildLargeMenu(numItems, maxVal, maxCost: int): Menu =
    result = initMenu(numItems)
-   for i in 0 .. <numItems:
-      result[i] = newFood($i, random(1..maxVal+1), random(1..maxCost+1))
+   for i in 0 ..< numItems:
+      result[i] = newFood($i, rand(1 .. maxVal), rand(1 .. maxCost))
 
 proc fastMaxVal(toConsider: Menu, avail: int, memo = newTable[(int, int), (int, Menu)]()): (int, Menu) =
    # Assumes toConsider a list of items, avail a weight
@@ -121,18 +121,18 @@ proc fastMaxVal(toConsider: Menu, avail: int, memo = newTable[(int, int), (int, 
    if memo.hasKey((toConsider.len, avail)):
       result = memo[(toConsider.len, avail)]
    elif toConsider.len == 0 or avail == 0:
-      result = (0, nil)
+      result = (0, @[])
    elif toConsider[0].getCost() > avail:
       #Explore right branch only
-      result = fastMaxVal(toConsider[1..^1], avail, memo)
+      result = fastMaxVal(toConsider[1 .. ^1], avail, memo)
    else:
       let nextItem = toConsider[0]
       #Explore left branch
-      var (withVal, withToTake) = fastMaxVal(toConsider[1..^1],
+      var (withVal, withToTake) = fastMaxVal(toConsider[1 .. ^1],
                                              avail - nextItem.getCost(), memo)
       withVal += nextItem.getValue()
       #Explore right branch
-      let (withoutVal, withoutToTake) = fastMaxVal(toConsider[1..^1], avail, memo)
+      let (withoutVal, withoutToTake) = fastMaxVal(toConsider[1 .. ^1], avail, memo)
       #Choose better branch
       if withVal > withoutVal:
          result = (withVal, withToTake & nextItem)
@@ -159,7 +159,7 @@ let calories = @[123, 154, 258, 354, 365, 150, 95, 195]
 
 # let foods = toMenu(names, values, calories)
 # testGreedys(foods, 750)
-# echo ""
+# echo()
 # testMaxVal(foods, 750)
 
 let items = buildLargeMenu(50, 90, 250)

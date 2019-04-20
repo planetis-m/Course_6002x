@@ -44,9 +44,9 @@ iterator powerSet(items: List): List =
    ## generate all combinations of N items
    let n = len(items)
    # enumerate the `2^n` possible combinations
-   for i in 0 .. <(2^n):
+   for i in 0 ..< 2^n:
       var combo = initList()
-      for j in 0 .. <n:
+      for j in 0 ..< n:
          # test bit jth of integer i
          if (i shr j) mod 2 == 1:
             combo.add(items[j])
@@ -64,9 +64,9 @@ iterator yieldAllCombos(items: List): (List, List) =
    ## a list of which item(s) are in each bag.
    let n = len(items)
    # enumerate the `3^n` possible combinations
-   for i in 0 .. <(3^n):
+   for i in 0 ..< 3^n:
       var bag1, bag2 = initList()
-      for j in 0 .. <n:
+      for j in 0 ..< n:
          # test bit jth of integer i
          if (i div 3^j) mod 3 == 1:
             bag1.add(items[j])
