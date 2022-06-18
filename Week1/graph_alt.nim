@@ -97,7 +97,6 @@ proc graphDslImpl(head, body: NimNode): NimNode =
 
 macro edges(head, body: untyped): untyped =
    result = graphDslImpl(head, body)
-   echo result.repr
 
 proc buildCityGraph(): Digraph =
    result = initGraph()
@@ -106,6 +105,7 @@ proc buildCityGraph(): Digraph =
       "Boston" -> "New York"
       "Providence" -> "New York"
       "New York" -> "Chicago"
+      "Chicago" -> "Phoenix"
       "Chicago" -> "Denver"
       "Denver" -> "Phoenix"
       "Denver" -> "New York"
@@ -162,4 +162,4 @@ proc testSP(source, destination: string) =
 
 # testSP("Chicago", "Boston")
 testSP("Boston", "Phoenix")
-# Correct: Boston->New York->Chicago->Denver->Phoenix
+# Correct: Boston->New York->Chicago->Phoenix

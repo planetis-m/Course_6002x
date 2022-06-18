@@ -13,6 +13,8 @@ type
       blackOdds, redOdds, pocketOdds: float
 
 proc initRoulette(rEnum: RouletteKind): Roulette =
+   result = Roulette(kind: rEnum, blackOdds: 1.0, redOdds: 1.0,
+         pocketOdds: float(len(result.pockets) - 1))
    result.pockets = case rEnum
       of Fair:
          1..36
@@ -20,11 +22,6 @@ proc initRoulette(rEnum: RouletteKind): Roulette =
          1..37
       of American:
          1..38
-   result.kind = rEnum
-   result.ball = 0
-   result.blackOdds = 1.0
-   result.redOdds = 1.0
-   result.pocketOdds = float(len(result.pockets) - 1)
 
 proc spin(self: var Roulette) =
    self.ball = rand(self.pockets)
@@ -33,7 +30,7 @@ proc isBlack(self: Roulette): bool =
    if self.ball > 36:
       false
    elif (self.ball > 0 and self.ball <= 10) or
-      (self.ball > 18 and self.ball <= 28):
+         (self.ball > 18 and self.ball <= 28):
       self.ball mod 2 == 0
    else:
       self.ball mod 2 == 1
@@ -56,7 +53,8 @@ proc betPocket(self: Roulette, pocket: int, amt: float): float =
       amt*self.pocketOdds
    else: -amt
 
-proc playRoulette(game: var Roulette, numSpins: int, toPrint = true): auto =
+proc playRoulette(game: var Roulette, numSpins: int, toPrint = true): (float,
+      float, float) =
    let luckyNumber = 2
    let bet = 1.0
    var totRed, totBlack, totPocket = 0.0
@@ -67,10 +65,10 @@ proc playRoulette(game: var Roulette, numSpins: int, toPrint = true): auto =
       totPocket += game.betPocket(luckyNumber, bet)
    if toPrint:
       echo(numSpins, " spins of ", game.kind)
-      echo("Expected return betting red = ",
-            $(100*totRed/numSpins.float), "%")
-      echo("Expected return betting black = ",
-            $(100*totBlack/numSpins.float), "%")
+      echo("Expected return betting red = ", $(100*totRed/numSpins.float),
+            "%")
+      echo("Expected return betting black = ", $(100*totBlack/numSpins.float),
+            "%")
       echo("Expected return betting ", luckyNumber, " = ",
             $(100*totPocket/numSpins.float), "%\n")
    (totRed/numSpins.float, totBlack/numSpins.float, totPocket/numSpins.float)
@@ -81,12 +79,11 @@ proc playRoulette(game: var Roulette, numSpins: int, toPrint = true): auto =
 
 proc findPocketReturn(game: var Roulette, numTrials: int, trialSize: int,
                       toPrint: bool): seq[float] =
-   result = @[]
    for t in 1 .. numTrials:
       let trialVals = playRoulette(game, trialSize, toPrint)
       result.add(trialVals[2])
 
-proc getMeanAndStd(xa: seq[float]): auto =
+proc getMeanAndStd(xa: seq[float]): (float, float) =
    let mean = sum(xa)/len(xa).float
    var tot = 0.0
    for x in xa:
@@ -97,18 +94,18 @@ proc getMeanAndStd(xa: seq[float]): auto =
 template ff(f: float, prec: int = 3): string = formatFloat(f, ffDecimal, prec)
 
 proc simAll(rouletteKinds: set[RouletteKind], gameLengths: openarray[int],
-            numTrials: int) =
+      numTrials: int) =
    for numSpins in gameLengths:
-      echo("\nSimulate betting a pocket for ", numTrials,
-            " trials of ", numSpins, " spins each.")
+      echo("\nSimulate betting a pocket for ", numTrials, " trials of ",
+            numSpins, " spins each.")
       for rEnum in rouletteKinds:
          var game = initRoulette(rEnum)
          let pocketReturns = game.findPocketReturn(numTrials, numSpins, false)
          # echo("Exp. return for ", game.kind, " = ",
          #       $(100*sum(pocketReturns)/len(pocketReturns).float), "%")
          let (mean, std) = getMeanAndStd(pocketReturns)
-         echo("Exp. return for ", game.kind, " = ", ff(100*mean),
-              "%, +/- ", ff(100*1.96*std), "% with 95% confidence")
+         echo("Exp. return for ", game.kind, " = ", ff(100*mean), "%, +/- ",
+               ff(100*1.96*std), "% with 95% confidence")
 
 simAll({Fair, European, American},
        [100, 1000, 10_000, 100_000], 20)
